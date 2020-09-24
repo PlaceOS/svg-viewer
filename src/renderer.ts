@@ -1,0 +1,118 @@
+import { updateViewer } from './api';
+import { cleanCssSelector, coordinatesForElement, log } from './helpers';
+import { listenForViewActions } from './input';
+import { HashMap, Styles } from './types';
+import { Viewer } from './viewer.class';
+
+const _animation_frames: HashMap<number> = {};
+const _labels: HashMap<string> = {};
+
+export async function createView(viewer: Viewer) {
+    const element: HTMLElement | null = viewer.element;
+    if (!element) throw new Error('No element set on viewer');
+    const container_el = document.createElement('div');
+    const styles_el = document.createElement('style');
+    const render_el = document.createElement('div');
+    const svg_el = document.createElement('div');
+    const overlays_el = document.createElement('div');
+    /** Add rendered elements to container */
+    render_el.appendChild(svg_el);
+    render_el.appendChild(overlays_el);
+    /** Add root elements to container */
+    container_el.appendChild(styles_el);
+    container_el.appendChild(render_el);
+    /** Set classes for elements */
+    container_el.classList.add('svg-viewer');
+    container_el.id = viewer.id;
+    styles_el.id = viewer.id;
+    render_el.classList.add('render-container');
+    overlays_el.classList.add('svg-overlays');
+    /** Add SVG to the view */
+    svg_el.classList.add('svg-output');
+    svg_el.innerHTML = viewer.svg_data;
+    /** Append SVG viewer to selected element */
+    element.appendChild(container_el);
+    const box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
+    overlays_el.style.width = box.width + 'px';
+    overlays_el.style.height = box.height + 'px';
+    viewer = await updateViewer(viewer, { ratio: box.height / box.width, box: container_el.getBoundingClientRect() }, false);
+    renderView(viewer);
+    listenForViewActions(viewer);
+}
+
+export function renderView(viewer: Viewer) {
+    if (_animation_frames[viewer.id]) {
+        cancelAnimationFrame(_animation_frames[viewer.id]);
+    }
+    _animation_frames[viewer.id] = requestAnimationFrame(() => {
+        const element: HTMLElement | null = viewer.element;
+        if (!element) throw new Error('No element set on viewer');
+        const styles_el: HTMLDivElement = element.querySelector('style') as any;
+        let styles = styleMapToString(viewer.id, viewer.styles);
+        const render_el: HTMLDivElement = element.querySelector('.render-container') as any;
+        const scale = `scale(${viewer.zoom / 10})`;
+        render_el.style.transform = `translate(${(viewer.center.x - 0.5) * (100 * (viewer.zoom / 10))}%, ${
+            (viewer.center.y - 0.5) * (100 * (viewer.zoom / 10))
+        }%) ${scale} rotate(${viewer.rotate}deg)`;
+        styles += ` #${cleanCssSelector(viewer.id)} .svg-overlays > * { transform: scale(${
+            10 / viewer.zoom
+        }) rotate(-${viewer.rotate}deg) }`;
+        styles_el.innerHTML = styles;
+        _animation_frames[viewer.id] = 0;
+        renderLabels(viewer);
+    });
+}
+
+export function renderLabels(viewer: Viewer) {
+    const labels_string = JSON.stringify(viewer.labels);
+    if (labels_string !== _labels[viewer.id]) {
+        const overlay_el = viewer.element?.querySelector('.svg-overlays');
+        if (!overlay_el) return;
+        const label_el_list = overlay_el.querySelectorAll('label');
+        /** Remove existing labels */
+        label_el_list.forEach(label_el => {
+            if (label_el.parentNode) {
+                overlay_el.removeChild(label_el.parentNode);
+            }
+        });
+        for (const label of viewer.labels) {
+            let coordinates = { x: 0, y: 0 };
+            let for_value = '~Nothing~';
+            if (typeof label.location === 'string') {
+                coordinates = coordinatesForElement(viewer, label.location);
+                for_value = `#${label.location}`;
+            } else {
+                coordinates = label.location;
+                for_value = `loc-${coordinates.x}-${coordinates.y}`;
+            }
+            const label_container_el = document.createElement('div');
+            label_container_el.classList.add('svg-overlay-item');
+            label_container_el.style.top = `${coordinates.y * 100}%`;
+            label_container_el.style.left = `${coordinates.x * 100}%`;
+            const label_el = document.createElement('label');
+            label_el.setAttribute('for', for_value);
+            label_el.textContent = label.content;
+            label_container_el.appendChild(label_el);
+            overlay_el.appendChild(label_container_el);
+        }
+        log('RENDER', `Added ${viewer.labels.length} labels to view.`);
+        _labels[viewer.id] = labels_string;
+    }
+}
+
+/**
+ * Convert mapping of styles to a string
+ * @param id ID of the viewer
+ * @param styles Style mappings
+ */
+export function styleMapToString(id: string, styles: Styles): string {
+    let output = '';
+    for (const selector in styles) {
+        let properties = '';
+        for (const prop in styles[selector]) {
+            properties += `${prop}: ${styles[selector][prop]}; `;
+        }
+        output += `#${cleanCssSelector(id)} ${cleanCssSelector(selector)} { ${properties} } `;
+    }
+    return output;
+}
