@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>SVG Viewer Demo</title>
+        <base href="/" />
+        <style>
+            .html,
+            body {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                padding: 0;
+                margin: 0;
+                font-size: 16px;
+            }
+
+            button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: absolute;
+                font-size: 2em;
+                bottom: .5em;
+                height: 1.5em;
+                width: 1.5em;
+                border-radius: 100%;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                transition: border 200ms, background 200ms;
+                padding-bottom: .25em;
+            }
+
+            button:hover {
+                background-color: #f0f0f0;
+            }
+
+            button:active {
+                border-color: rgba(0,0,0,0);
+            }
+        </style>
+        <script src="./demo.js"></script>
+    </head>
+    <body>
+        <div id="svg-viewer"></div>
+        <button id="zoom-in" style="right: .5em">+</button>
+        <button id="zoom-out" style="right: 2.5em">-</button>
+        <button id="rotate" style="right: 4.5em">↻</button>
+    </body>
+</html>
