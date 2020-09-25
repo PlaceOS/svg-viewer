@@ -37,6 +37,15 @@ export interface Feature {
     readonly location: string | Point;
 }
 
+export interface ViewAction {
+    /** ID of the element to listen for actions */
+    readonly id: string;
+    /** Action to listen for on the SVG */
+    readonly action: 'click' | 'enter' | 'leave';
+    /** Callback for event action */
+    readonly callback: (e: Event) => void;
+}
+
 export interface Styles {
     [selector: string]: {
         [prop: string]: string | number;

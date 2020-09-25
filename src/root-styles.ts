@@ -56,6 +56,7 @@ export const STYLES = `
         color: white;
         white-space: pre-line;
         text-align: center;
+        min-width: 10em;
     }
 
     .svg-viewer .svg-overlay-item {

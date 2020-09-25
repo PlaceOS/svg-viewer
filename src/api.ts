@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Viewer } from "./viewer.class";
 import { ViewerOptions, HashMap } from './types';
 import { createView, renderView } from './renderer';
+import { listenForCustomViewActions } from './input';
 
 /**
  * @hidden
@@ -27,7 +28,7 @@ export async function createViewer(options: ViewerOptions) {
     viewer = new Viewer({ ...options, svg_data });
     _svg_viewers.next([...view_list, viewer]);
     createView(viewer);
-    return viewer;
+    return viewer.id;
 }
 
 /**
@@ -39,15 +40,14 @@ export async function updateViewer(viewer: string, options: HashMap, render?: bo
 export async function updateViewer(viewer: Viewer, options: HashMap, render?: boolean): Promise<Viewer>;
 export async function updateViewer(viewer: string | Viewer, options: HashMap, render: boolean = true): Promise<Viewer> {
     const view_list = _svg_viewers.getValue();
-    if (!(viewer instanceof Viewer)) {
-        viewer = view_list.find(v => v.id === viewer) as any;
-    }
-    if (!viewer) throw new Error('Unable to find viewer');
+    if (!(viewer instanceof Viewer)) { viewer = view_list.find(v => v.id === viewer)!; }
+    if (!(viewer instanceof Viewer)) throw new Error('Unable to find viewer');
     delete options.url;
     const updated_viewer = new Viewer({ ...(viewer as Viewer), ...options });
     _svg_viewers.next(view_list.filter(v => v.id !== updated_viewer.id).concat([updated_viewer]));
     if (render) {
         renderView(updated_viewer);
+        listenForCustomViewActions(updated_viewer);
     }
     return updated_viewer;
 }

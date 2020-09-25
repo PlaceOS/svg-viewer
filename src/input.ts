@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { getViewer, updateViewer } from './api';
 import { eventToPoint, log } from './helpers';
@@ -24,9 +24,11 @@ export interface ViewerAction {
 /** Mapping of Viewers to the lister actions */
 const _view_actions = new BehaviorSubject<HashMap<ViewerAction[]>>({});
 /** Emitter for view events */
-const _action_emitter = new BehaviorSubject<ViewerEvent | null>(null);
+const _action_emitter = new Subject<ViewerEvent>();
 /** Mapping of viewers to the event subscriptions */
 const _subscriptions: HashMap<Subscription> = {};
+/** Mapping of custom action hash to viewer */
+const _custom_action_map: HashMap<string> = {};
 
 const DEFAULT_ACTION_TYPES = [
     'click',
@@ -39,6 +41,8 @@ const DEFAULT_ACTION_TYPES = [
     'mousewheel',
     'wheel',
 ];
+
+let _ignore_actions: string[] = [];
 
 export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT_ACTION_TYPES) {
     const action_map = _view_actions.getValue();
@@ -53,7 +57,7 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
     for (const type of actions) {
         const action: ViewerAction = {
             type,
-            fn: (e: Event) => emitter.next({ id: viewer.id, type, event: e }),
+            fn: (e: Event) => _ignore_actions.includes(type) ? '' : emitter.next({ id: viewer.id, type, event: e }),
         };
         element.addEventListener(type, action.fn);
         action_list.push(action);
@@ -67,10 +71,10 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
 }
 
 export function listenForViewPanStart(viewer: Viewer, emitter: Observable<ViewerEvent>) {
-    if (_subscriptions[`${viewer.id}_pan`]) {
-        _subscriptions[`${viewer.id}_pan`].unsubscribe();
+    if (_subscriptions[`${viewer.id}-pan`]) {
+        _subscriptions[`${viewer.id}-pan`].unsubscribe();
     }
-    _subscriptions[`${viewer.id}_pan`] = emitter
+    _subscriptions[`${viewer.id}-pan`] = emitter
         .pipe(
             filter((_) => _.type === 'touchstart' || _.type === 'mousedown'),
             map((e) => e.event)
@@ -91,10 +95,10 @@ export function listenForViewPanning(
     emitter: Observable<ViewerEvent>,
     start: Point
 ) {
-    if (_subscriptions[`${viewer.id}_panning`]) {
-        _subscriptions[`${viewer.id}_panning`].unsubscribe();
+    if (_subscriptions[`${viewer.id}-panning`]) {
+        _subscriptions[`${viewer.id}-panning`].unsubscribe();
     }
-    _subscriptions[`${viewer.id}_panning`] = emitter
+    _subscriptions[`${viewer.id}-panning`] = emitter
         .pipe(
             filter((_) => _.type === 'touchmove' || _.type === 'mousemove'),
             map((e) => e.event)
@@ -103,6 +107,8 @@ export function listenForViewPanning(
             const view = getViewer(viewer.id);
             if (view) {
                 const point = eventToPoint(e);
+                const diff = Math.abs((point.x - start.x) + (point.y - start.y));
+                if (!_ignore_actions.includes('click') && diff > 1) { _ignore_actions.push('click'); }
                 const center = {
                     x: Math.max(
                         0,
@@ -126,24 +132,27 @@ export function listenForViewPanning(
 }
 
 export function listenForViewPanEnd(viewer: Viewer, emitter: Observable<ViewerEvent>) {
-    _subscriptions[`${viewer.id}_pan_end`] = emitter
+    _subscriptions[`${viewer.id}-pan_end`] = emitter
         .pipe(filter((_) => _.type === 'touchend' || _.type === 'mouseup'))
         .subscribe(() => {
             log('INPUT', 'Ending panning...');
-            if (_subscriptions[`${viewer.id}_pan_end`]) {
-                _subscriptions[`${viewer.id}_pan_end`].unsubscribe();
+            if (_subscriptions[`${viewer.id}-pan_end`]) {
+                _subscriptions[`${viewer.id}-pan_end`].unsubscribe();
             }
-            if (_subscriptions[`${viewer.id}_panning`]) {
-                _subscriptions[`${viewer.id}_panning`].unsubscribe();
+            if (_subscriptions[`${viewer.id}-panning`]) {
+                _subscriptions[`${viewer.id}-panning`].unsubscribe();
             }
+            setTimeout(() => {
+                _ignore_actions = _ignore_actions.filter(i => i !== 'click');
+            }, 100);
         });
 }
 
 export function listenForViewScrolling(viewer: Viewer, emitter: Observable<ViewerEvent>) {
-    if (_subscriptions[`${viewer.id}_scrolling`]) {
-        _subscriptions[`${viewer.id}_scrolling`].unsubscribe();
+    if (_subscriptions[`${viewer.id}-scrolling`]) {
+        _subscriptions[`${viewer.id}-scrolling`].unsubscribe();
     }
-    _subscriptions[`${viewer.id}_scrolling`] = emitter
+    _subscriptions[`${viewer.id}-scrolling`] = emitter
         .pipe(
             filter((_) => _.type === 'mousewheel' || _.type === 'wheel'),
             map((e) => e.event)
@@ -158,4 +167,27 @@ export function listenForViewScrolling(viewer: Viewer, emitter: Observable<Viewe
                 updateViewer(view, { zoom });
             }
         });
+}
+
+export function listenForCustomViewActions(
+    viewer: Viewer,
+    emitter: Observable<ViewerEvent> = _action_emitter as any
+) {
+    const actions_string = JSON.stringify(viewer.actions);
+    if (_custom_action_map[viewer.id] !== actions_string) {
+        const keys = Object.keys(_subscriptions).filter((key) => key.includes(`${viewer.id}_`));
+        for (const key of keys) {
+            _subscriptions[key].unsubscribe();
+        }
+        for (const action of viewer.actions) {
+            _subscriptions[`${viewer.id}_${action.id}-${action.action}`] = emitter
+                .pipe(filter((e) => e && e.type === action.action))
+                .subscribe((e) => {
+                    const el: HTMLElement = e.event.target as any;
+                    if (el.id === action.id) {
+                        action.callback(e.event);
+                    }
+                });
+        }
+    }
 }
