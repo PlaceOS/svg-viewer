@@ -61,9 +61,12 @@ export function renderView(viewer: Viewer) {
         }%, ${(viewer.center.y - 0.5) * (100 * (viewer.zoom / 10))}%) ${scale} rotate(${
             viewer.rotate
         }deg)`;
+        styles += ` #${cleanCssSelector(viewer.id)} .svg-overlay-item > * { transform: rotate(-${
+            viewer.rotate
+        }deg) }`;
         styles += ` #${cleanCssSelector(viewer.id)} .svg-overlays > * { transform: scale(${
             10 / viewer.zoom
-        }) rotate(-${viewer.rotate}deg) }`;
+        })`;
         styles_el.innerHTML = styles;
         _animation_frames[viewer.id] = 0;
         renderLabels(viewer);
