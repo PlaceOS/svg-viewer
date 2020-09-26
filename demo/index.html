@@ -40,11 +40,34 @@
             button:active {
                 border-color: rgba(0,0,0,0);
             }
+
+            .overlays {
+                display: none;
+            }
+
+            .overlay {
+                background-color: #fff;
+                border-radius: 4px;
+                padding: .5em 1em;
+                box-shadow: 0 1px 3px 1px rgba(0,0,0, .2),
+                            0 1px 1px 0 rgba(0,0,0, .14),
+                            0 2px 1px -1px rgba(0,0,0, .12);
+            }
         </style>
         <script src="./demo.js"></script>
     </head>
     <body>
         <div id="svg-viewer"></div>
+        <div class="overlays">
+            <div id="AU-NT" class="overlay">
+                Northern Territory<br>
+                Established in 1825
+            </div>
+            <div id="AU-QLD" class="overlay">
+                Queensland<br>
+                Established in 1859
+            </div>
+        </div>
         <button id="zoom-in" style="right: .5em">+</button>
         <button id="zoom-out" style="right: 2.5em">-</button>
         <button id="rotate" style="right: 4.5em">↻</button>

@@ -73,12 +73,30 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
     if (element && svg_el) {
         const box = svg_box || svg_el.getBoundingClientRect();
         const el_box = element.getBoundingClientRect();
-        return {
+        const coords = {
             x: ((el_box.left + el_box.width / 2) - box.left) / box.width,
             y: ((el_box.top + el_box.height / 2) - box.top) / box.height,
-        }
+        };
+        console.log('Coords:', box, el_box, coords);
+        return coords;
     } else {
         log('DOM', `Unable to find element with ID ${id}`, undefined, 'warn');
     }
     return { x: -9, y: -9 };
+}
+
+export function relativeSizeOfElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
+    const svg_el = viewer.element?.querySelector(`svg`);
+    const element = svg_el?.querySelector(`#${cleanCssSelector(id)}`);
+    if (element && svg_el) {
+        const box = svg_box || svg_el.getBoundingClientRect();
+        const el_box = element.getBoundingClientRect();
+        return {
+            w: el_box.width / box.width,
+            h: el_box.height / box.height,
+        }
+    } else {
+        log('DOM', `Unable to find element with ID ${id}`, undefined, 'warn');
+    }
+    return { w: 0, h: 0 };
 }

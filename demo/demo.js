@@ -53,7 +53,13 @@ window.addEventListener('DOMContentLoaded', () => {
         ],
         url: '/australia.svg',
     }).then((viewer) => {
+        const el = document.querySelector('.overlays #AU\.NT');
+        console.log('Element:', el);
         updateViewer(viewer, {
+            features: [
+                { location: 'AU.NT', hover: true, content: document.querySelector('.overlays #AU-NT') },
+                { location: 'AU-QLD', hover: true, content: document.querySelector('.overlays #AU-QLD') }
+            ],
             actions: ['AU.NT', 'AU-QLD', 'AU-NSW', 'AU-WA', 'AU-TAS', 'AU-VIC', 'AU-SA', 'AU-ACT'].map(id => {
                 return {
                     id,

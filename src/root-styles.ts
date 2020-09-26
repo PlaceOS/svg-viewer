@@ -66,13 +66,18 @@ export const STYLES = `
         height: 1px;
         width: 1px;
         position: absolute;
+        transform-origin: center;
     }
 
     .svg-viewer .svg-overlay-item.hover {
+        pointer-events: auto;
+    }
+
+    .svg-viewer .svg-overlay-item.hover > * {
         display: none;
     }
 
-    .svg-viewer .svg-overlay-item.hover:hover {
+    .svg-viewer .svg-overlay-item.hover:hover > * {
         display: initial;
     }
 

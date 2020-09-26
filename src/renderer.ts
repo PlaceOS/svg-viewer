@@ -1,11 +1,12 @@
 import { updateViewer } from './api';
-import { cleanCssSelector, coordinatesForElement, log } from './helpers';
+import { cleanCssSelector, coordinatesForElement, log, relativeSizeOfElement } from './helpers';
 import { listenForViewActions } from './input';
 import { HashMap, Styles } from './types';
 import { Viewer } from './viewer.class';
 
 const _animation_frames: HashMap<number> = {};
 const _labels: HashMap<string> = {};
+const _features: HashMap<string> = {};
 
 export async function createView(viewer: Viewer) {
     const element: HTMLElement | null = viewer.element;
@@ -60,6 +61,7 @@ export function renderView(viewer: Viewer) {
         styles_el.innerHTML = styles;
         _animation_frames[viewer.id] = 0;
         renderLabels(viewer);
+        renderFeatures(viewer);
     });
 }
 
@@ -97,6 +99,48 @@ export function renderLabels(viewer: Viewer) {
         }
         log('RENDER', `Added ${viewer.labels.length} labels to view.`);
         _labels[viewer.id] = labels_string;
+    }
+}
+
+export function renderFeatures(viewer: Viewer) {
+    const features_string = JSON.stringify(viewer.features.map(i => ({ ...i, content: '' })));
+    if (features_string !== _features[viewer.id]) {
+        const overlay_el = viewer.element?.querySelector('.svg-overlays');
+        if (!overlay_el) return;
+        const feature_el_list = overlay_el.querySelectorAll('.feature');
+        /** Remove existing features */
+        feature_el_list.forEach(feature_el => {
+            if (feature_el.parentNode) {
+                overlay_el.removeChild(feature_el);
+            }
+        });
+        for (const feature of viewer.features) {
+            let coordinates = { x: 0, y: 0 };
+            let size = { w: 0, h: 0 };
+            if (typeof feature.location === 'string') {
+                coordinates = coordinatesForElement(viewer, feature.location);
+                size = relativeSizeOfElement(viewer, feature.location);
+            } else {
+                coordinates = feature.location;
+            }
+            const feature_container_el = document.createElement('div');
+            feature_container_el.classList.add('svg-overlay-item');
+            feature_container_el.classList.add('feature');
+            if (feature.hover) {
+                feature_container_el.classList.add('hover');
+            }
+            feature_container_el.style.top = `${coordinates.y * 90}%`;
+            feature_container_el.style.left = `${coordinates.x * 97.5}%`;
+            if (size.w || size.h) {
+                feature_container_el.style.width = `${size.w * 100 * (viewer.zoom / 10)}%`;
+                feature_container_el.style.height = `${size.h * 100 * (viewer.zoom / 10)}%`;
+                feature_container_el.id = `${feature.location}`;
+            }
+            feature_container_el.appendChild(feature.content);
+            overlay_el.appendChild(feature_container_el);
+        }
+        log('RENDER', `Added ${viewer.features.length} features to view.`);
+        _features[viewer.id] = features_string;
     }
 }
 

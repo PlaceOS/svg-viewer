@@ -33,7 +33,11 @@ export interface Label {
 }
 
 export interface Feature {
+    /** Contents of the feature to render */
     readonly content: HTMLElement;
+    /** Whether contents should only show on hover of location */
+    readonly hover?: boolean;
+    /** Element ID or Coordinates to display the content */
     readonly location: string | Point;
 }
 
