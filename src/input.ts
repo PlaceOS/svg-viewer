@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { getViewer, updateViewer } from './api';
-import { eventToPoint, log } from './helpers';
+import { coordinatesForElement, eventToPoint, log } from './helpers';
 
 import { HashMap, Point } from './types';
 import { Viewer } from './viewer.class';
@@ -29,6 +29,8 @@ const _action_emitter = new Subject<ViewerEvent>();
 const _subscriptions: HashMap<Subscription> = {};
 /** Mapping of custom action hash to viewer */
 const _custom_action_map: HashMap<string> = {};
+/** Mapping of custom action hash to viewer */
+const _focus_feature_map: HashMap<string> = {};
 
 const DEFAULT_ACTION_TYPES = [
     'click',
@@ -43,6 +45,22 @@ const DEFAULT_ACTION_TYPES = [
 ];
 
 let _ignore_actions: string[] = [];
+
+export function focusOnFeature(viewer: Viewer) {
+    const _focus_string = JSON.stringify(viewer.focus);
+    if (viewer.focus && _focus_string !== _focus_feature_map[viewer.id]) {
+
+        let coordinates = { x: 0, y: 0 };
+        const zoom = Math.max(1, Math.min(10, viewer.focus.zoom_level || 1));
+        if (typeof viewer.focus.location === 'string') {
+            coordinates = coordinatesForElement(viewer, viewer.focus.location);
+        } else {
+            coordinates = viewer.focus.location;
+        }
+        _focus_feature_map[viewer.id] = _focus_string;
+        updateViewer(viewer, { desired_center: { x: 1 - coordinates.x, y: 1 - coordinates.y }, desired_zoom: zoom });
+    }
+}
 
 export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT_ACTION_TYPES) {
     const action_map = _view_actions.getValue();
@@ -125,7 +143,6 @@ export function listenForViewPanning(
                         )
                     ),
                 };
-                console.log('Center:', view.center);
                 start = point;
                 updateViewer(view, { center, desired_center: center });
             }

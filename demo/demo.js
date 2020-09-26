@@ -1,7 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { createViewer, getViewer, updateViewer } from '../dist/esm/api.js';
 import { applyGlobalStyles } from '../dist/esm/root-styles.js';
-import { cleanCssSelector } from '../dist/esm/helpers.js';
 
 window.debug = true;
 
@@ -70,17 +69,26 @@ window.addEventListener('DOMContentLoaded', () => {
         const in_el = document.getElementById('zoom-in');
         in_el.addEventListener('click', () => {
             zoom = zoom * 1.1;
-            updateViewer(viewer, { zoom });
+            updateViewer(viewer, { desired_zoom: zoom });
         });
         const out_el = document.getElementById('zoom-out');
         out_el.addEventListener('click', () => {
             zoom = zoom * (1 / 1.1);
-            updateViewer(viewer, { zoom });
+            updateViewer(viewer, { desired_zoom: zoom });
         });
         const rotate_el = document.getElementById('rotate');
         rotate_el.addEventListener('click', () => {
             rotate = (rotate + 45) % 360;
             updateViewer(viewer, { rotate });
+        });
+        const focus_el = document.getElementById('focus');
+        focus_el.addEventListener('click', () => {
+            const view = getViewer(viewer);
+            const focus_on = {
+                location: view.labels[Math.floor(Math.random() * view.labels.length)].location,
+                zoom_level: 1.5
+            }
+            updateViewer(viewer, { focus: focus_on });
         });
     });
 });

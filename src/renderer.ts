@@ -1,6 +1,6 @@
 import { updateViewer } from './api';
 import { cleanCssSelector, coordinatesForElement, log, relativeSizeOfElement } from './helpers';
-import { listenForViewActions } from './input';
+import { focusOnFeature, listenForViewActions } from './input';
 import { HashMap, Styles } from './types';
 import { Viewer } from './viewer.class';
 
@@ -69,6 +69,7 @@ export function renderView(viewer: Viewer) {
         })`;
         styles_el.innerHTML = styles;
         _animation_frames[viewer.id] = 0;
+        focusOnFeature(viewer);
         renderLabels(viewer);
         renderFeatures(viewer);
     });

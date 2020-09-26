@@ -41,6 +41,13 @@ export interface Feature {
     readonly location: string | Point;
 }
 
+export interface FocusFeature {
+    /** Element ID or Coordinates to focus on */
+    readonly location: string | Point;
+    /** Zoom level to focus on */
+    readonly zoom_level: number;
+}
+
 export interface ViewAction {
     /** ID of the element to listen for actions */
     readonly id: string;

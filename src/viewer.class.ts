@@ -1,6 +1,6 @@
 import { Md5 } from 'ts-md5';
 
-import { Feature, Label, Point, Styles, ViewAction } from './types';
+import { Feature, FocusFeature, Label, Point, Styles, ViewAction } from './types';
 
 const EMPTY_BOX = { top: 0, left: 0, bottom: 0, right: 0, height: 0, width: 0 };
 
@@ -24,6 +24,8 @@ export class Viewer {
     public readonly features: Feature[];
     /** Actions to listen for on the SVG */
     public readonly actions: ViewAction[];
+    /** Point or Element to focus on in the viewer */
+    public readonly focus: FocusFeature | null;
     /** Styles to apply the SVG */
     public readonly styles: Styles;
     /** Raw SVG data */
@@ -59,6 +61,7 @@ export class Viewer {
         this.center = { x: _data.center?.x || 0.5, y: _data.center?.y || 0.5 };
         this.rotate = _data.rotate || 0;
         this.ratio = _data.ratio || 1;
+        this.focus = _data.focus || null;
         this.box = {
             top: (_data.box || EMPTY_BOX).top,
             left: (_data.box || EMPTY_BOX).left,
@@ -75,7 +78,6 @@ export class Viewer {
             const change = Math.min(0.1, Math.abs(this.desired_zoom - this.zoom));
             const ratio = Math.round((change / (this.desired_zoom - this.zoom)) * 1000) / 1000;
             this.zoom = change < 0.1 ? this.zoom + direction * change : this.desired_zoom;
-            console.log('Ratio:', ratio);
             this.center = {
                 x: this.center.x + (this.desired_center.x - this.center.x) * (ratio || 1),
                 y: this.center.y + (this.desired_center.y - this.center.y) * (ratio || 1),
@@ -94,8 +96,6 @@ export class Viewer {
                 y: (this.center.y + (y_direction * y_change)) || this.desired_center.y,
             };
         }
-        console.log('Zoom:', this.zoom, this.desired_zoom);
-        console.log('Center:', this.center, this.desired_center);
         this.needs_update =
             this.desired_zoom !== this.zoom ||
             this.desired_center.x !== this.center.x ||
