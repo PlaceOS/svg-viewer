@@ -24,19 +24,10 @@ const COLOURS = [
     '#f4511e',
 ];
 
-function setFill(id) {
-    const element = document.querySelector(`.svg-viewer ${cleanCssSelector(id)}`);
-    if (element) {
-        element.style.fill = `${COLOURS[(Math.random() * 9999) % COLOURS.length]}`;
-    } else {
-        console.log(`Element not found ${id}`);
-    }
-}
+let colour_index = 0;
 
 window.addEventListener('DOMContentLoaded', () => {
     const element = document.getElementById('svg-viewer');
-
-    console.log('Element:', element);
 
     applyGlobalStyles();
     createViewer({
@@ -54,7 +45,6 @@ window.addEventListener('DOMContentLoaded', () => {
         url: '/australia.svg',
     }).then((viewer) => {
         const el = document.querySelector('.overlays #AU\.NT');
-        console.log('Element:', el);
         updateViewer(viewer, {
             features: [
                 { location: 'AU.NT', hover: true, content: document.querySelector('.overlays #AU-NT') },
@@ -68,7 +58,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         const view = getViewer(viewer);
                         const styles = view.styles;
                         styles[`#${id}`] = {
-                            fill: COLOURS[Math.floor(Math.random() * COLOURS.length)],
+                            fill: COLOURS[colour_index++ % COLOURS.length],
                         };
                         updateViewer(viewer, { styles });
                     },

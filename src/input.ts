@@ -114,19 +114,20 @@ export function listenForViewPanning(
                         0,
                         Math.min(
                             1,
-                            (point.x - start.x) / view.box.width / view.zoom + view.center.x
+                            (point.x - start.x) / view.box.width / view.desired_zoom + view.center.x
                         )
                     ),
                     y: Math.max(
                         0,
                         Math.min(
                             1,
-                            (point.y - start.y) / view.box.height / view.zoom + view.center.y
+                            (point.y - start.y) / view.box.height / view.desired_zoom + view.center.y
                         )
                     ),
                 };
+                console.log('Center:', view.center);
                 start = point;
-                updateViewer(view, { center });
+                updateViewer(view, { center, desired_center: center });
             }
         });
 }
@@ -163,8 +164,8 @@ export function listenForViewScrolling(viewer: Viewer, emitter: Observable<Viewe
             const view = getViewer(viewer.id);
             if (view) {
                 const delta = -event.deltaY / 100;
-                const zoom = Math.min(10, Math.max(1, view.zoom + delta / 5));
-                updateViewer(view, { zoom });
+                const desired_zoom = Math.min(10, Math.max(1, view.desired_zoom + delta / 5));
+                updateViewer(view, { desired_zoom });
             }
         });
 }

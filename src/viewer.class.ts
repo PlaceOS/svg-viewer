@@ -38,6 +38,12 @@ export class Viewer {
     public readonly ratio: number;
     /** Box dimensions for the root element of the viewer */
     public readonly box: Box;
+    /** Zoom level of the SVG. Number from 1 - 10 */
+    public readonly desired_zoom: number;
+    /** Center point of the SVG on the view */
+    public readonly desired_center: Point;
+    /** Whether zoom and center still need updating */
+    public readonly needs_update: boolean;
 
     constructor(_data: Partial<Viewer>) {
         this.id = _data.id || `map-${Math.floor(Math.random() * 999_999)}`;
@@ -50,7 +56,7 @@ export class Viewer {
         this.svg_data = _data.svg_data || '';
         this.svg_data = _data.svg_data || '';
         this.zoom = _data.zoom || 1;
-        this.center = { x: (_data.center?.x || 0.5), y: (_data.center?.y || 0.5) };
+        this.center = { x: _data.center?.x || 0.5, y: _data.center?.y || 0.5 };
         this.rotate = _data.rotate || 0;
         this.ratio = _data.ratio || 1;
         this.box = {
@@ -59,5 +65,40 @@ export class Viewer {
             height: (_data.box || EMPTY_BOX).height,
             width: (_data.box || EMPTY_BOX).width,
         };
+        this.desired_zoom = _data.desired_zoom || _data.zoom || this.zoom;
+        this.desired_center = {
+            x: _data.desired_center?.x || _data.center?.x || .5,
+            y: _data.desired_center?.y || _data.center?.y || .5
+        };
+        if (this.zoom !== this.desired_zoom) {
+            const direction = this.desired_zoom - this.zoom >= 0 ? 1 : -1;
+            const change = Math.min(0.1, Math.abs(this.desired_zoom - this.zoom));
+            const ratio = Math.round((change / (this.desired_zoom - this.zoom)) * 1000) / 1000;
+            this.zoom = change < 0.1 ? this.zoom + direction * change : this.desired_zoom;
+            console.log('Ratio:', ratio);
+            this.center = {
+                x: this.center.x + (this.desired_center.x - this.center.x) * (ratio || 1),
+                y: this.center.y + (this.desired_center.y - this.center.y) * (ratio || 1),
+            };
+        } else if (
+            this.desired_center.x !== this.center.x ||
+            this.desired_center.y !== this.center.y
+        ) {
+            const x_direction = (this.desired_center.x - this.center.x) >= 0 ? 1 : -1;
+            const y_direction = (this.desired_center.y - this.center.y) >= 0 ? 1 : -1;
+            const x_change = Math.min(0.05, Math.abs(this.desired_center.x - this.center.x));
+            const ratio = x_change / Math.abs(this.desired_center.x - this.center.x);
+            const y_change = ratio * Math.abs(this.desired_center.y - this.center.y);
+            this.center = {
+                x: this.center.x + (x_direction * x_change),
+                y: (this.center.y + (y_direction * y_change)) || this.desired_center.y,
+            };
+        }
+        console.log('Zoom:', this.zoom, this.desired_zoom);
+        console.log('Center:', this.center, this.desired_center);
+        this.needs_update =
+            this.desired_zoom !== this.zoom ||
+            this.desired_center.x !== this.center.x ||
+            this.desired_center.y !== this.center.y;
     }
 }

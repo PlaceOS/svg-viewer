@@ -77,7 +77,6 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
             x: ((el_box.left + el_box.width / 2) - box.left) / box.width,
             y: ((el_box.top + el_box.height / 2) - box.top) / box.height,
         };
-        console.log('Coords:', box, el_box, coords);
         return coords;
     } else {
         log('DOM', `Unable to find element with ID ${id}`, undefined, 'warn');

@@ -36,7 +36,11 @@ export async function createView(viewer: Viewer) {
     const box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
     overlays_el.style.width = box.width + 'px';
     overlays_el.style.height = box.height + 'px';
-    viewer = await updateViewer(viewer, { ratio: box.height / box.width, box: container_el.getBoundingClientRect() }, false);
+    viewer = await updateViewer(
+        viewer,
+        { ratio: box.height / box.width, box: container_el.getBoundingClientRect() },
+        false
+    );
     renderView(viewer);
     listenForViewActions(viewer);
 }
@@ -52,9 +56,11 @@ export function renderView(viewer: Viewer) {
         let styles = styleMapToString(viewer.id, viewer.styles);
         const render_el: HTMLDivElement = element.querySelector('.render-container') as any;
         const scale = `scale(${viewer.zoom / 10})`;
-        render_el.style.transform = `translate(${(viewer.center.x - 0.5) * (100 * (viewer.zoom / 10))}%, ${
-            (viewer.center.y - 0.5) * (100 * (viewer.zoom / 10))
-        }%) ${scale} rotate(${viewer.rotate}deg)`;
+        render_el.style.transform = `translate(${
+            (viewer.center.x - 0.5) * (100 * (viewer.zoom / 10))
+        }%, ${(viewer.center.y - 0.5) * (100 * (viewer.zoom / 10))}%) ${scale} rotate(${
+            viewer.rotate
+        }deg)`;
         styles += ` #${cleanCssSelector(viewer.id)} .svg-overlays > * { transform: scale(${
             10 / viewer.zoom
         }) rotate(-${viewer.rotate}deg) }`;
@@ -72,7 +78,7 @@ export function renderLabels(viewer: Viewer) {
         if (!overlay_el) return;
         const label_el_list = overlay_el.querySelectorAll('label');
         /** Remove existing labels */
-        label_el_list.forEach(label_el => {
+        label_el_list.forEach((label_el) => {
             if (label_el.parentNode) {
                 overlay_el.removeChild(label_el.parentNode);
             }
@@ -103,13 +109,13 @@ export function renderLabels(viewer: Viewer) {
 }
 
 export function renderFeatures(viewer: Viewer) {
-    const features_string = JSON.stringify(viewer.features.map(i => ({ ...i, content: '' })));
+    const features_string = JSON.stringify(viewer.features.map((i) => ({ ...i, content: '' })));
     if (features_string !== _features[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-overlays');
         if (!overlay_el) return;
         const feature_el_list = overlay_el.querySelectorAll('.feature');
         /** Remove existing features */
-        feature_el_list.forEach(feature_el => {
+        feature_el_list.forEach((feature_el) => {
             if (feature_el.parentNode) {
                 overlay_el.removeChild(feature_el);
             }

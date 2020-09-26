@@ -9,6 +9,8 @@ import { listenForCustomViewActions } from './input';
  * @hidden
  */
 const _svg_viewers = new BehaviorSubject<Viewer[]>([]);
+/** Mapping of custom action hash to viewer */
+const _update_timers: HashMap<number> = {};
 
 export function getViewer(id: string): Viewer | undefined {
     return _svg_viewers.getValue().find(viewer => viewer.id === id);
@@ -45,6 +47,12 @@ export async function updateViewer(viewer: string | Viewer, options: HashMap, re
     delete options.url;
     const updated_viewer = new Viewer({ ...(viewer as Viewer), ...options });
     _svg_viewers.next(view_list.filter(v => v.id !== updated_viewer.id).concat([updated_viewer]));
+    if (updated_viewer.needs_update) {
+        if (_update_timers[viewer.id]) {
+            clearTimeout(_update_timers[viewer.id]);
+        }
+        _update_timers[viewer.id] = <any>setTimeout(() => updateViewer(updated_viewer, {}), 50);
+    }
     if (render) {
         renderView(updated_viewer);
         listenForCustomViewActions(updated_viewer);
