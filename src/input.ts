@@ -33,6 +33,7 @@ const _custom_action_map: HashMap<string> = {};
 const _focus_feature_map: HashMap<string> = {};
 
 const DEFAULT_ACTION_TYPES = [
+    'dblclick',
     'click',
     'mousedown',
     'mouseup',
@@ -83,9 +84,28 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
     action_map[viewer.id] = action_list;
     _view_actions.next(action_map);
     const view_emitter = emitter.pipe(filter((_) => !!_ && _.id === viewer.id));
+    listenForViewDoubleClick(viewer, view_emitter as any);
     listenForViewPanStart(viewer, view_emitter as any);
     listenForViewScrolling(viewer, view_emitter as any);
     return;
+}
+
+export function listenForViewDoubleClick(viewer: Viewer, emitter: Observable<ViewerEvent>) {
+    if (_subscriptions[`${viewer.id}-dblclick`]) {
+        _subscriptions[`${viewer.id}-dblclick`].unsubscribe();
+    }
+    _subscriptions[`${viewer.id}-dblclick`] = emitter
+        .pipe(
+            filter((_) => _.type === 'dblclick'),
+            map((e) => e.event)
+        )
+        .subscribe(_ => {
+            log('INPUT', 'Resetting zoom level and center position...');
+            const view = getViewer(viewer.id);
+            if (view) {
+                updateViewer(view, { desired_zoom: 1, desired_center: { x: .5, y: .5 } });
+            }
+        });
 }
 
 export function listenForViewPanStart(viewer: Viewer, emitter: Observable<ViewerEvent>) {
