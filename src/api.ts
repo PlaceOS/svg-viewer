@@ -51,7 +51,7 @@ export async function updateViewer(viewer: string | Viewer, options: HashMap, re
         if (_update_timers[viewer.id]) {
             clearTimeout(_update_timers[viewer.id]);
         }
-        _update_timers[viewer.id] = <any>setTimeout(() => updateViewer(updated_viewer, {}), 50);
+        _update_timers[viewer.id] = <any>setTimeout(() => updateViewer(updated_viewer, {}), 16);
     }
     if (render) {
         renderView(updated_viewer);

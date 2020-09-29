@@ -84,6 +84,21 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
     return { x: -9, y: -9 };
 }
 
+export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: ClientRect) {
+    const svg_el = viewer.element?.querySelector(`svg`);
+    if (svg_el) {
+        const box = svg_box || svg_el.getBoundingClientRect();
+        const coords = {
+            x: (point.x - box.left) / box.width,
+            y: (point.y - box.top) / box.height,
+        };
+        return coords;
+    } else {
+        log('DOM', `Unable to find SVG element`, undefined, 'warn');
+    }
+    return { x: 0, y: 0 };
+}
+
 export function relativeSizeOfElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
     const svg_el = viewer.element?.querySelector(`svg`);
     const element = svg_el?.querySelector(`#${cleanCssSelector(id)}`);
@@ -98,4 +113,18 @@ export function relativeSizeOfElement(viewer: Viewer, id: string, svg_box?: Clie
         log('DOM', `Unable to find element with ID ${id}`, undefined, 'warn');
     }
     return { w: 0, h: 0 };
+}
+
+export function calculateCenterFromZoomOffset(zoom_change: number, point: Point, center: Point) {
+    // const dir = zoom_change >= 1 ? 1 : -1;
+    // if (dir > 0) {
+    //     return {
+    //         x: point.x - (point.x - center.x) / zoom_change,
+    //         y: point.y - (point.y - center.y) / zoom_change,
+    //     }
+    // }
+    return {
+        x: Math.round((point.x + (center.x - point.x) / zoom_change) * 10000) / 10000,
+        y: Math.round((point.y + (center.y - point.y) / zoom_change) * 10000) / 10000,
+    }
 }
