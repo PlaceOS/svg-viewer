@@ -74,8 +74,8 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
         const box = svg_box || svg_el.getBoundingClientRect();
         const el_box = element.getBoundingClientRect();
         const coords = {
-            x: ((el_box.left + el_box.width / 2) - box.left) / box.width,
-            y: ((el_box.top + el_box.height / 2) - box.top) / box.height,
+            x: (el_box.left + el_box.width / 2 - box.left) / box.width,
+            y: (el_box.top + el_box.height / 2 - box.top) / box.height,
         };
         return coords;
     } else {
@@ -108,23 +108,20 @@ export function relativeSizeOfElement(viewer: Viewer, id: string, svg_box?: Clie
         return {
             w: el_box.width / box.width,
             h: el_box.height / box.height,
-        }
+        };
     } else {
         log('DOM', `Unable to find element with ID ${id}`, undefined, 'warn');
     }
     return { w: 0, h: 0 };
 }
 
+export function distanceBetween(first: Point, second: Point) {
+    return Math.sqrt(Math.pow(first.x - second.x, 2) + Math.pow(first.y - second.y, 2));
+}
+
 export function calculateCenterFromZoomOffset(zoom_change: number, point: Point, center: Point) {
-    // const dir = zoom_change >= 1 ? 1 : -1;
-    // if (dir > 0) {
-    //     return {
-    //         x: point.x - (point.x - center.x) / zoom_change,
-    //         y: point.y - (point.y - center.y) / zoom_change,
-    //     }
-    // }
     return {
         x: Math.round((point.x + (center.x - point.x) / zoom_change) * 10000) / 10000,
         y: Math.round((point.y + (center.y - point.y) / zoom_change) * 10000) / 10000,
-    }
+    };
 }
