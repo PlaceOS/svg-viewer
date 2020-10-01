@@ -297,7 +297,7 @@ export function listenForViewPinching(
                             )
                         ),
                     };
-                    const zoom = Math.max(0, Math.min(10, view.zoom * dist / distance));
+                    const zoom = Math.max(1, Math.min(10, view.zoom * dist / distance));
                     start = mid_point;
                     distance = dist;
                     updateViewer(view, { center, desired_center: center, zoom, desired_zoom: zoom });
