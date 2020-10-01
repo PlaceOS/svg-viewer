@@ -33,12 +33,18 @@ export async function createView(viewer: Viewer) {
     svg_el.innerHTML = viewer.svg_data;
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
-    const box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
+    const container_box = container_el.getBoundingClientRect();
+    let box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
+    const ratio = container_box.height / container_box.width;
+    ratio > (box.height / box.width) && svg_el.firstElementChild
+        ? (svg_el.firstElementChild as any).style.height = '100%'
+        : (svg_el.firstElementChild as any).style.width = '100%';
+    box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
     overlays_el.style.width = box.width + 'px';
     overlays_el.style.height = box.height + 'px';
     viewer = await updateViewer(
         viewer,
-        { ratio: box.height / box.width, box: container_el.getBoundingClientRect() },
+        { ratio: box.height / box.width, box: container_box },
         false
     );
     renderView(viewer);
