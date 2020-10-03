@@ -63,8 +63,8 @@ export const STYLES = `
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 1px;
-        width: 1px;
+        height: 0.1%;
+        width: 0.1%;
         position: absolute;
         transform-origin: center;
     }

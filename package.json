@@ -30,7 +30,6 @@
         "demo": "npm run build && cp ./demo/australia.svg ./dist/ && parcel demo/index.html"
     },
     "peerDependencies": {
-        "date-fns": "^2.15.0",
         "rxjs": "^6.6.2",
         "ts-md5": "^1.2.7"
     },

@@ -60,11 +60,10 @@ export function eventToPoint(event: MouseEvent | TouchEvent): Point {
     }
     if (event instanceof MouseEvent) {
         return { x: event.clientX, y: event.clientY };
-    } else {
-        return event.touches && event.touches.length > 0
-            ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
-            : { x: -1, y: -1 };
     }
+    return event.touches && event.touches.length > 0
+        ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
+        : { x: -1, y: -1 };
 }
 
 export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
