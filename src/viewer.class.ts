@@ -1,6 +1,6 @@
 import { Md5 } from 'ts-md5';
 
-import { Feature, FocusFeature, Label, Point, Styles, ViewAction } from './types';
+import { ViewerFeature, ViewerFocusFeature, ViewerLabel, Point, ViewerStyles, ViewAction, ViewerOptions } from './types';
 
 const EMPTY_BOX = { top: 0, left: 0, bottom: 0, right: 0, height: 0, width: 0 };
 
@@ -19,15 +19,15 @@ export class Viewer {
     /** Element the SVG is attached */
     public readonly element: HTMLElement | null;
     /** Labels to render over the SVG */
-    public readonly labels: Label[];
+    public readonly labels: ViewerLabel[];
     /** Features to render over the SVG */
-    public readonly features: Feature[];
+    public readonly features: ViewerFeature[];
     /** Actions to listen for on the SVG */
     public readonly actions: ViewAction[];
     /** Point or Element to focus on in the viewer */
-    public readonly focus: FocusFeature | null;
+    public readonly focus: ViewerFocusFeature | null;
     /** Styles to apply the SVG */
-    public readonly styles: Styles;
+    public readonly styles: ViewerStyles;
     /** Raw SVG data */
     public readonly svg_data: string;
     /** Zoom level of the SVG. Number from 1 - 10 */
@@ -46,6 +46,8 @@ export class Viewer {
     public readonly desired_center: Point;
     /** Whether zoom and center still need updating */
     public readonly needs_update: boolean;
+    /**  */
+    public readonly options: ViewerOptions;
 
     constructor(_data: Partial<Viewer>) {
         this.id = _data.id || `map-${Math.floor(Math.random() * 999_999)}`;
@@ -62,6 +64,7 @@ export class Viewer {
         this.rotate = _data.rotate || 0;
         this.ratio = _data.ratio || 1;
         this.focus = _data.focus || null;
+        this.options = _data.options || {};
         this.box = {
             top: (_data.box || EMPTY_BOX).top,
             left: (_data.box || EMPTY_BOX).left,

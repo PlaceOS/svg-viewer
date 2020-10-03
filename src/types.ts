@@ -9,21 +9,11 @@ export interface Point {
 }
 
 export interface ViewerOptions {
-    /** URL of the SVG to load */
-    url?: string;
-    /** Raw SVG data to render */
-    svg_data?: string;
-    /** Element the SVG is attached */
-    element: HTMLElement;
-    /** Labels to add to the  */
-    labels: Label[];
-    /** Labels to add to the  */
-    features: Feature[];
-    /** Styles to apply the  */
-    styles: Styles;
+    readonly disable_pan?: boolean;
+    readonly disable_zoom?: boolean;
 }
 
-export interface Label {
+export interface ViewerLabel {
     /** String to populate the label with */
     readonly content: string;
     /** Element ID or Coordinates to display the text */
@@ -32,7 +22,7 @@ export interface Label {
     readonly zoom_level?: number;
 }
 
-export interface Feature {
+export interface ViewerFeature {
     /** Contents of the feature to render */
     readonly content: HTMLElement;
     /** Whether contents should only show on hover of location */
@@ -41,7 +31,7 @@ export interface Feature {
     readonly location: string | Point;
 }
 
-export interface FocusFeature {
+export interface ViewerFocusFeature {
     /** Element ID or Coordinates to focus on */
     readonly location: string | Point;
     /** Zoom level to focus on */
@@ -52,12 +42,12 @@ export interface ViewAction {
     /** ID of the element to listen for actions */
     readonly id: string;
     /** Action to listen for on the SVG */
-    readonly action: 'click' | 'enter' | 'leave';
+    readonly action: 'click' | 'mousedown' | 'mouseup' | 'enter' | 'leave';
     /** Callback for event action */
-    readonly callback: (e: Event) => void;
+    readonly callback: (e: Event, p?: Point) => void;
 }
 
-export interface Styles {
+export interface ViewerStyles {
     [selector: string]: {
         [prop: string]: string | number;
     }
