@@ -32,24 +32,24 @@ window.addEventListener('DOMContentLoaded', () => {
     createViewer({
         element,
         labels: [
-            { location: 'AU.NT', content: 'Northern\nTerritory' },
-            { location: 'AU-NSW', content: 'New South\nWales' },
-            { location: 'AU-VIC', content: 'Victoria' },
-            { location: 'AU-QLD', content: 'Queensland' },
-            { location: 'AU-WA', content: 'Western Australia' },
-            { location: 'AU-SA', content: 'South Australia' },
-            { location: 'AU-ACT', content: 'ACT' },
-            { location: 'AU-TAS', content: 'Tasmania' },
+            { location: 'NT-mainland', content: 'Northern\nTerritory' },
+            { location: 'NSW', content: 'New South\nWales' },
+            { location: 'VIC', content: 'Victoria' },
+            { location: 'QLD-mainland', content: 'Queensland' },
+            { location: 'WA', content: 'Western Australia' },
+            { location: 'SA-mainland', content: 'South Australia' },
+            { location: 'ACT', content: 'ACT' },
+            { location: 'TAS-mainland', content: 'Tasmania' },
         ],
         url: '/australia.svg',
     }).then((viewer) => {
-        const el = document.querySelector('.overlays #AU\.NT');
+        const el = document.querySelector('.overlays #NT');
         updateViewer(viewer, {
             features: [
-                { location: 'AU.NT', hover: true, content: document.querySelector('.overlays #AU-NT') },
-                { location: 'AU-QLD', hover: true, content: document.querySelector('.overlays #AU-QLD') }
+                { location: 'NT-mainland', hover: true, content: document.querySelector('.overlays #NT') },
+                { location: 'QLD-mainland', hover: true, content: document.querySelector('.overlays #QLD') }
             ],
-            actions: ['AU.NT', 'AU-QLD', 'AU-NSW', 'AU-WA', 'AU-TAS', 'AU-VIC', 'AU-SA', 'AU-ACT'].map(id => {
+            actions: ['NT-mainland', 'QLD-mainland', 'NSW', 'WA', 'TAS-mainland', 'VIC', 'SA-mainland', 'ACT'].map(id => {
                 return {
                     id,
                     action: 'click',
