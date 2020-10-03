@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
-import { getViewer, updateViewer } from './api';
+import { getViewer, resizeViewers, updateViewer } from './api';
 import { subscription, unsubscribe, unsubscribeWith } from './async';
 import {
     calculateCenterFromZoomOffset,
@@ -52,6 +52,7 @@ const DEFAULT_ACTION_TYPES = [
 ];
 
 let _ignore_actions: string[] = [];
+let _listening_for_resize = false;
 
 export function focusOnFeature(viewer: Viewer) {
     const _focus_string = JSON.stringify(viewer.focus);
@@ -71,6 +72,12 @@ export function focusOnFeature(viewer: Viewer) {
     }
 }
 
+export function listenForResize() {
+    if (_listening_for_resize) return;
+    window.addEventListener('resize', () => resizeViewers());
+    _listening_for_resize = true;
+}
+
 export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT_ACTION_TYPES) {
     const action_map = _view_actions.getValue();
     const element = viewer.element as HTMLElement;
@@ -84,12 +91,16 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
     for (const type of actions) {
         const action: ViewerAction = {
             type,
-            fn: (e: Event) =>{
+            fn: (e: Event) => {
                 e.preventDefault();
                 e.stopPropagation();
-                return _ignore_actions.includes(type)
-                    ? ''
-                    : emitter.next({ id: viewer.id, type, event: e })
+                type === 'touchend'
+                    ? _ignore_actions.includes(type)
+                        ? ''
+                        : emitter.next({ id: viewer.id, type: 'click', event: e })
+                    : _ignore_actions.includes(type)
+                        ? ''
+                        : emitter.next({ id: viewer.id, type, event: e });
             },
         };
         element.addEventListener(type, action.fn);
@@ -153,7 +164,7 @@ export function listenForViewPanStart(viewer: Viewer, emitter: Observable<Viewer
             .subscribe((e: any) => {
                 log('INPUT', 'Starting panning...');
                 const view = getViewer(viewer.id);
-                if (view) {
+                if (view && !view.options.disable_pan) {
                     const start_point = eventToPoint(e);
                     listenForViewPanning(view, emitter, start_point);
                     listenForViewPanEnd(view, emitter);
@@ -221,7 +232,6 @@ export function listenForViewPanEnd(viewer: Viewer, emitter: Observable<ViewerEv
     );
 }
 
-
 export function listenForViewPinchStart(viewer: Viewer, emitter: Observable<ViewerEvent>) {
     subscription(
         `${viewer.id}-pinch_start`,
@@ -233,14 +243,14 @@ export function listenForViewPinchStart(viewer: Viewer, emitter: Observable<View
             .subscribe((e: any) => {
                 log('INPUT', 'Starting pinching...');
                 const view = getViewer(viewer.id);
-                if (view) {
+                if (view && !view.options.disable_zoom) {
                     const points = [
                         { x: e.touches[0].clientX, y: e.touches[0].clientY },
                         { x: e.touches[1].clientX, y: e.touches[1].clientY },
                     ];
                     const start_point = {
                         x: (points[0].x + points[1].x) / 2,
-                        y: (points[0].y + points[1].y) / 2
+                        y: (points[0].y + points[1].y) / 2,
                     };
                     const start_dist = distanceBetween(points[0], points[1]);
                     listenForViewPinching(view, emitter, start_point, start_dist);
@@ -265,14 +275,14 @@ export function listenForViewPinching(
             )
             .subscribe((e: any) => {
                 const view = getViewer(viewer.id);
-                if (view) {
+                if (view && !view.options.disable_zoom) {
                     const points = [
                         { x: e.touches[0].clientX, y: e.touches[0].clientY },
                         { x: e.touches[1].clientX, y: e.touches[1].clientY },
                     ];
                     const mid_point = {
                         x: (points[0].x + points[1].x) / 2,
-                        y: (points[0].y + points[1].y) / 2
+                        y: (points[0].y + points[1].y) / 2,
                     };
                     const dist = distanceBetween(points[0], points[1]);
                     const diff = Math.abs(mid_point.x - start.x + (mid_point.y - start.y));
@@ -297,10 +307,15 @@ export function listenForViewPinching(
                             )
                         ),
                     };
-                    const zoom = Math.max(1, Math.min(10, view.zoom * dist / distance));
+                    const zoom = Math.max(1, Math.min(10, (view.zoom * dist) / distance));
                     start = mid_point;
                     distance = dist;
-                    updateViewer(view, { center, desired_center: center, zoom, desired_zoom: zoom });
+                    updateViewer(view, {
+                        center,
+                        desired_center: center,
+                        zoom,
+                        desired_zoom: zoom,
+                    });
                 }
             })
     );
@@ -367,8 +382,11 @@ export function listenForCustomViewActions(
                 `${viewer.id}_${action.id}-${action.action}`,
                 emitter.pipe(filter((e) => e && e.type === action.action)).subscribe((e) => {
                     const el: HTMLElement = e.event.target as any;
-                    if (el.id === action.id) {
-                        action.callback(e.event);
+                    if (el.id === action.id || action.id === '*') {
+                        action.callback(
+                            e.event,
+                            coordinatesForPoint(viewer, eventToPoint(e.event as any))
+                        );
                     }
                 })
             );

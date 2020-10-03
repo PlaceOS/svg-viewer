@@ -1,9 +1,10 @@
 import { BehaviorSubject } from 'rxjs';
 
 import { Viewer } from "./viewer.class";
-import { ViewerOptions, HashMap } from './types';
-import { createView, renderView } from './renderer';
+import { HashMap } from './types';
+import { createView, renderView, resizeView } from './renderer';
 import { listenForCustomViewActions } from './input';
+import { unsubscribeWith } from './async';
 
 /**
  * @hidden
@@ -16,15 +17,24 @@ export function getViewer(id: string): Viewer | undefined {
     return _svg_viewers.getValue().find(viewer => viewer.id === id);
 }
 
+
+
+export function resizeViewers() {
+    const viewer_list = _svg_viewers.getValue();
+    for (const viewer of viewer_list) {
+        resizeView(viewer);
+    }
+}
+
 /**
  * Create a new SVG viewer
  * @param options Definition of the view details
  */
-export async function createViewer(options: ViewerOptions) {
+export async function createViewer(options: Partial<Viewer>) {
     const view_list = _svg_viewers.getValue();
     let viewer = view_list.find(viewer => viewer.url === options.url);
     if (viewer) {
-        return viewer;
+        return viewer.id;
     }
     const svg_data = options.svg_data || await loadSVGData(options.url || '');
     viewer = new Viewer({ ...options, svg_data });
@@ -38,9 +48,9 @@ export async function createViewer(options: ViewerOptions) {
  * @param viewer Viewer or ID to update
  * @param options New details for the viewer
  */
-export async function updateViewer(viewer: string, options: HashMap, render?: boolean): Promise<Viewer>;
-export async function updateViewer(viewer: Viewer, options: HashMap, render?: boolean): Promise<Viewer>;
-export async function updateViewer(viewer: string | Viewer, options: HashMap, render: boolean = true): Promise<Viewer> {
+export async function updateViewer(viewer: string, options: Partial<Viewer>, render?: boolean): Promise<Viewer>;
+export async function updateViewer(viewer: Viewer, options: Partial<Viewer>, render?: boolean): Promise<Viewer>;
+export async function updateViewer(viewer: string | Viewer, options: Partial<Viewer>, render: boolean = true): Promise<Viewer> {
     const view_list = _svg_viewers.getValue();
     if (!(viewer instanceof Viewer)) { viewer = view_list.find(v => v.id === viewer)!; }
     if (!(viewer instanceof Viewer)) throw new Error('Unable to find viewer');
@@ -61,11 +71,27 @@ export async function updateViewer(viewer: string | Viewer, options: HashMap, re
 }
 
 /**
+ *
+ * @param id
+ */
+export function removeViewer(id: string) {
+    const view = getViewer(id);
+    if (!view) return;
+    const view_el = view.element?.querySelector('.svg-viewer');
+    if (!view_el) return;
+    view.element?.removeChild(view_el);
+    const viewer_list = _svg_viewers.getValue();
+    // Remove listeners for viewer
+    unsubscribeWith(`${id}`);
+    _svg_viewers.next(viewer_list.filter(v => v.id !== id));
+}
+
+/**
  * @hidden
  * Load SVG from a URL
  * @param url URL to load SVG data for
  */
 export async function loadSVGData(url: string) {
-    const resp = await fetch(url);
+    const resp = await fetch(url, { headers: { Accept: 'text/xml' } });
     return resp.text();
 }

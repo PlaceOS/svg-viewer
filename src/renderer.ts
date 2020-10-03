@@ -1,7 +1,7 @@
 import { updateViewer } from './api';
 import { cleanCssSelector, coordinatesForElement, log, relativeSizeOfElement } from './helpers';
-import { focusOnFeature, listenForViewActions } from './input';
-import { HashMap, Styles } from './types';
+import { focusOnFeature, listenForResize, listenForViewActions } from './input';
+import { HashMap, ViewerStyles } from './types';
 import { Viewer } from './viewer.class';
 
 const _animation_frames: HashMap<number> = {};
@@ -30,15 +30,19 @@ export async function createView(viewer: Viewer) {
     overlays_el.classList.add('svg-overlays');
     /** Add SVG to the view */
     svg_el.classList.add('svg-output');
+    svg_el.id = 'svg-output';
     svg_el.innerHTML = viewer.svg_data;
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
     const container_box = container_el.getBoundingClientRect();
     let box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
     const ratio = container_box.height / container_box.width;
-    ratio > (box.height / box.width) && svg_el.firstElementChild
+    ratio < (box.height / box.width) && svg_el.firstElementChild
         ? (svg_el.firstElementChild as any).style.height = '100%'
         : (svg_el.firstElementChild as any).style.width = '100%';
+    ratio < (box.height / box.width) && svg_el.firstElementChild
+        ? (svg_el.firstElementChild as any).style.width = 'auto'
+        : (svg_el.firstElementChild as any).style.height = 'auto';
     box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
     overlays_el.style.width = box.width + 'px';
     overlays_el.style.height = box.height + 'px';
@@ -49,6 +53,7 @@ export async function createView(viewer: Viewer) {
     );
     renderView(viewer);
     listenForViewActions(viewer);
+    listenForResize();
 }
 
 export function renderView(viewer: Viewer) {
@@ -78,6 +83,35 @@ export function renderView(viewer: Viewer) {
         focusOnFeature(viewer);
         renderLabels(viewer);
         renderFeatures(viewer);
+    });
+}
+
+export async function resizeView(viewer: Viewer) {
+    const element: HTMLElement | null = viewer.element;
+    if (!element) throw new Error('No element set on viewer');
+    const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
+    const overlays_el: HTMLDivElement = element.querySelector('.svg-overlays') as any;
+    const svg_el: HTMLDivElement = element.querySelector('.svg-output') as any;
+    const container_box = container_el.getBoundingClientRect();
+    (svg_el.firstElementChild as any).style.height = '';
+    (svg_el.firstElementChild as any).style.width = '';
+    requestAnimationFrame(async () => {
+        let box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
+        const ratio = container_box.height / container_box.width;
+        ratio < (box.height / box.width) && svg_el.firstElementChild
+            ? (svg_el.firstElementChild as any).style.height = '100%'
+            : (svg_el.firstElementChild as any).style.width = '100%';
+        ratio < (box.height / box.width) && svg_el.firstElementChild
+            ? (svg_el.firstElementChild as any).style.width = 'auto'
+            : (svg_el.firstElementChild as any).style.height = 'auto';
+        box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
+        overlays_el.style.width = (box.width * (10 / viewer.zoom)) + 'px';
+        overlays_el.style.height = (box.height * (10 / viewer.zoom)) + 'px';
+        viewer = await updateViewer(
+            viewer,
+            { ratio: box.height / box.width, box: container_box },
+            false
+        );
     });
 }
 
@@ -145,8 +179,8 @@ export function renderFeatures(viewer: Viewer) {
             if (feature.hover) {
                 feature_container_el.classList.add('hover');
             }
-            feature_container_el.style.top = `${coordinates.y * 90}%`;
-            feature_container_el.style.left = `${coordinates.x * 97.5}%`;
+            feature_container_el.style.top = `${coordinates.y * 100}%`;
+            feature_container_el.style.left = `${coordinates.x * 100}%`;
             if (size.w || size.h) {
                 feature_container_el.style.width = `${size.w * 100 * (viewer.zoom / 10)}%`;
                 feature_container_el.style.height = `${size.h * 100 * (viewer.zoom / 10)}%`;
@@ -165,7 +199,7 @@ export function renderFeatures(viewer: Viewer) {
  * @param id ID of the viewer
  * @param styles Style mappings
  */
-export function styleMapToString(id: string, styles: Styles): string {
+export function styleMapToString(id: string, styles: ViewerStyles): string {
     let output = '';
     for (const selector in styles) {
         let properties = '';
