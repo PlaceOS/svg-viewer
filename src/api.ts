@@ -9,9 +9,17 @@ import { unsubscribeWith } from './async';
 /**
  * @hidden
  */
-const _svg_viewers = new BehaviorSubject<Viewer[]>([]);
-/** Mapping of custom action hash to viewer */
-const _update_timers: HashMap<number> = {};
+export const _svg_viewers = new BehaviorSubject<Viewer[]>([]);
+/**
+ * @hidden
+ * Mapping of custom action hash to viewer
+ */
+export const _update_timers: HashMap<number> = {};
+/**
+ * @hidden
+ * Mapping of URLs to their respective SVG data
+ */
+export const _svg_cache: HashMap<string> = {};
 
 export function getViewer(id: string): Viewer | undefined {
     return _svg_viewers.getValue().find(viewer => viewer.id === id);
@@ -36,7 +44,7 @@ export async function createViewer(options: Partial<Viewer>) {
     if (viewer) {
         return viewer.id;
     }
-    const svg_data = options.svg_data || await loadSVGData(options.url || '');
+    const svg_data = options.svg_data || await loadSVGData(options.url);
     viewer = new Viewer({ ...options, svg_data });
     _svg_viewers.next([...view_list, viewer]);
     createView(viewer);
@@ -48,9 +56,9 @@ export async function createViewer(options: Partial<Viewer>) {
  * @param viewer Viewer or ID to update
  * @param options New details for the viewer
  */
-export async function updateViewer(viewer: string, options: Partial<Viewer>, render?: boolean): Promise<Viewer>;
-export async function updateViewer(viewer: Viewer, options: Partial<Viewer>, render?: boolean): Promise<Viewer>;
-export async function updateViewer(viewer: string | Viewer, options: Partial<Viewer>, render: boolean = true): Promise<Viewer> {
+export function updateViewer(viewer: string, options: Partial<Viewer>, render?: boolean): Viewer;
+export function updateViewer(viewer: Viewer, options: Partial<Viewer>, render?: boolean): Viewer;
+export function updateViewer(viewer: string | Viewer, options: Partial<Viewer>, render: boolean = true): Viewer {
     const view_list = _svg_viewers.getValue();
     if (!(viewer instanceof Viewer)) { viewer = view_list.find(v => v.id === viewer)!; }
     if (!(viewer instanceof Viewer)) throw new Error('Unable to find viewer');
@@ -79,7 +87,7 @@ export function removeViewer(id: string) {
     if (!view) return;
     const view_el = view.element?.querySelector('.svg-viewer');
     if (!view_el) return;
-    view.element?.removeChild(view_el);
+    view.element!.removeChild(view_el);
     const viewer_list = _svg_viewers.getValue();
     // Remove listeners for viewer
     unsubscribeWith(`${id}`);
@@ -91,7 +99,11 @@ export function removeViewer(id: string) {
  * Load SVG from a URL
  * @param url URL to load SVG data for
  */
-export async function loadSVGData(url: string) {
-    const resp = await fetch(url, { headers: { Accept: 'text/xml' } });
-    return resp.text();
+export async function loadSVGData(url: string = '') {
+    const resp = _svg_cache[url]
+        ? { text: async () => _svg_cache[url] }
+        : await fetch(url);
+    const text = await resp.text();
+    _svg_cache[url] = text;
+    return text;
 }

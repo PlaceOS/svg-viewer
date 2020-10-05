@@ -80,7 +80,7 @@ export class Viewer {
             const direction = this.desired_zoom - this.zoom >= 0 ? 1 : -1;
             const change = Math.min(0.05, Math.abs(this.desired_zoom - this.zoom));
             const ratio = Math.round((change / (this.desired_zoom - this.zoom)) * 1000) / 1000;
-            this.zoom = change < 0.05 ? this.zoom + direction * change : this.desired_zoom;
+            this.zoom = change === 0.05 ? this.zoom + direction * change : this.desired_zoom;
             this.center = {
                 x: this.center.x + (this.desired_center.x - this.center.x) * (ratio || 1),
                 y: this.center.y + (this.desired_center.y - this.center.y) * (ratio || 1),
