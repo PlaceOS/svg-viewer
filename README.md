@@ -12,7 +12,7 @@ You can build the library from source after installing the dependencies with the
 
 API docs can be found [here](https://mryuion.github.io/svg-viewer)
 
-You can install the PlaceOS Typescript client with the npm command
+You can install the library with the npm command
 
 `npm install --save-dev @yuion/svg-viewer`
 
