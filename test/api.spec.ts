@@ -44,6 +44,30 @@ describe('API Methods', () => {
         });
     });
 
+    describe('listenToViewerChanges', () => {
+
+        afterEach(() => {
+            API._svg_viewers.next([]);
+        });
+
+        it('should return the viewer with the given ID', (done) => {
+            expect.assertions(2);
+            let count = 0;
+            API.listenToViewerChanges('1').subscribe((viewer) => {
+                if (count === 0) {
+                    expect(viewer.zoom).toBe(1.5);
+                    setTimeout(() => API._svg_viewers.next([new Viewer({ id: '1', zoom: 2 })]));
+                } else if (count === 1) {
+                    expect(viewer.zoom).toBe(2);
+                    done();
+                }
+                count++;
+            });
+            API._svg_viewers.next([new Viewer({ id: '1', zoom: 1.5 })]);
+            API._svg_viewers.next(API._svg_viewers.getValue().concat([new Viewer({ id: '2' })]));
+        });
+    });
+
     describe('createViewer', () => {
 
         afterEach(() => {

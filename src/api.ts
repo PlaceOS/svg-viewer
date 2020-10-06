@@ -1,10 +1,11 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 import { Viewer } from "./viewer.class";
 import { HashMap } from './types';
 import { createView, renderView, resizeView } from './renderer';
 import { listenForCustomViewActions } from './input';
 import { unsubscribeWith } from './async';
+import { distinct, filter, map } from 'rxjs/operators';
 
 /**
  * @hidden
@@ -25,8 +26,21 @@ export function getViewer(id: string): Viewer | undefined {
     return _svg_viewers.getValue().find(viewer => viewer.id === id);
 }
 
+/**
+ * Get observable for changes made a specific viewer
+ * @param id ID of the viewer to observe
+ */
+export function listenToViewerChanges(id: string): Observable<Viewer> {
+    return _svg_viewers.pipe(
+        filter(list => !!list.find(viewer => viewer.id === id)),
+        map(list => list.find(viewer => viewer.id === id)),
+        distinct()
+    ) as any;
+}
 
-
+/**
+ * Handle viewport changes with active viewers
+ */
 export function resizeViewers() {
     const viewer_list = _svg_viewers.getValue();
     for (const viewer of viewer_list) {
