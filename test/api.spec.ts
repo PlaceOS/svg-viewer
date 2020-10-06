@@ -7,28 +7,6 @@ import * as Input from '../src/input';
 
 describe('API Methods', () => {
 
-    describe('resizeViewers', () => {
-        let spy: jest.SpyInstance;
-
-        beforeEach(() => {
-            spy = jest.spyOn(Renderer, 'resizeView');
-        });
-
-        afterEach(() => {
-            spy.mockRestore();
-            API._svg_viewers.next([]);
-        })
-
-        it('should call resize for each viewer', () => {
-            API._svg_viewers.next([new Viewer({ id: '1' })]);
-            API.resizeViewers();
-            expect(Renderer.resizeView).toBeCalledTimes(1);
-            API._svg_viewers.next([new Viewer({ id: '1' }), new Viewer({ id: '2' })]);
-            API.resizeViewers();
-            expect(Renderer.resizeView).toBeCalledTimes(3);
-        });
-    });
-
     describe('getViewer', () => {
 
         afterEach(() => {
@@ -53,7 +31,9 @@ describe('API Methods', () => {
         it('should return the viewer with the given ID', (done) => {
             expect.assertions(2);
             let count = 0;
+            console.log(API._svg_viewers.getValue());
             API.listenToViewerChanges('1').subscribe((viewer) => {
+                console.log('Count:', count);
                 if (count === 0) {
                     expect(viewer.zoom).toBe(1.5);
                     setTimeout(() => API._svg_viewers.next([new Viewer({ id: '1', zoom: 2 })]));
@@ -176,6 +156,28 @@ describe('API Methods', () => {
             (window as any).fetch.mockImplementation(() => ({ text: async () => 'another file' }));
             data = await API.loadSVGData('my.svg');
             expect(data).toBe('a file');
+        });
+    });
+
+    describe('resizeViewers', () => {
+        let spy: jest.SpyInstance;
+
+        beforeEach(() => {
+            spy = jest.spyOn(Renderer, 'resizeView');
+        });
+
+        afterEach(() => {
+            spy.mockRestore();
+            API._svg_viewers.next([]);
+        })
+
+        it('should call resize for each viewer', () => {
+            API._svg_viewers.next([new Viewer({ id: '1' })]);
+            API.resizeViewers();
+            expect(Renderer.resizeView).toBeCalledTimes(1);
+            API._svg_viewers.next([new Viewer({ id: '1' }), new Viewer({ id: '2' })]);
+            API.resizeViewers();
+            expect(Renderer.resizeView).toBeCalledTimes(3);
         });
     });
 
