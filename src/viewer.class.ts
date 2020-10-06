@@ -2,7 +2,10 @@ import { Md5 } from 'ts-md5';
 
 import { ViewerFeature, ViewerFocusFeature, ViewerLabel, Point, ViewerStyles, ViewAction, ViewerOptions } from './types';
 
-const EMPTY_BOX = { top: 0, left: 0, bottom: 0, right: 0, height: 0, width: 0 };
+/**
+ * @hidden
+ */
+export const EMPTY_BOX = { top: 0, left: 0, bottom: 0, right: 0, height: 0, width: 0 };
 
 export interface Box {
     readonly left: number;
@@ -58,7 +61,6 @@ export class Viewer {
         this.actions = _data.actions || [];
         this.styles = _data.styles || {};
         this.svg_data = _data.svg_data || '';
-        this.svg_data = _data.svg_data || '';
         this.zoom = _data.zoom || 1;
         this.center = { x: _data.center?.x || 0.5, y: _data.center?.y || 0.5 };
         this.rotate = _data.rotate || 0;
@@ -73,8 +75,8 @@ export class Viewer {
         };
         this.desired_zoom = _data.desired_zoom || _data.zoom || this.zoom;
         this.desired_center = {
-            x: _data.desired_center?.x || _data.center?.x || .5,
-            y: _data.desired_center?.y || _data.center?.y || .5
+            x: _data.desired_center?.x || this.center.x,
+            y: _data.desired_center?.y || this.center.y
         };
         if (this.zoom !== this.desired_zoom) {
             const direction = this.desired_zoom - this.zoom >= 0 ? 1 : -1;
@@ -82,8 +84,8 @@ export class Viewer {
             const ratio = Math.round((change / (this.desired_zoom - this.zoom)) * 1000) / 1000;
             this.zoom = change === 0.05 ? this.zoom + direction * change : this.desired_zoom;
             this.center = {
-                x: this.center.x + (this.desired_center.x - this.center.x) * (ratio || 1),
-                y: this.center.y + (this.desired_center.y - this.center.y) * (ratio || 1),
+                x: this.center.x + (this.desired_center.x - this.center.x) * ratio,
+                y: this.center.y + (this.desired_center.y - this.center.y) * ratio,
             };
         } else if (
             this.desired_center.x !== this.center.x ||
@@ -91,12 +93,12 @@ export class Viewer {
         ) {
             const x_direction = (this.desired_center.x - this.center.x) >= 0 ? 1 : -1;
             const y_direction = (this.desired_center.y - this.center.y) >= 0 ? 1 : -1;
-            const x_change = Math.min(0.05, Math.abs(this.desired_center.x - this.center.x));
+            const x_change = Math.min(0.01, Math.abs(this.desired_center.x - this.center.x));
             const ratio = x_change / Math.abs(this.desired_center.x - this.center.x);
             const y_change = ratio * Math.abs(this.desired_center.y - this.center.y);
             this.center = {
                 x: this.center.x + (x_direction * x_change),
-                y: (this.center.y + (y_direction * y_change)) || this.desired_center.y,
+                y: this.center.y + (y_direction * y_change)
             };
         }
         this.needs_update =
