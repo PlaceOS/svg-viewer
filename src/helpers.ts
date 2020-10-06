@@ -10,6 +10,7 @@ declare global {
 /** Available console output streams. */
 export type ConsoleStream = 'debug' | 'warn' | 'log' | 'error';
 
+/* istanbul ignore next */ // No testing needed for logging
 /**
  * Log data to the browser console
  * @param type Type of message
@@ -80,7 +81,7 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
     } else {
         log('DOM', `Unable to find element with ID ${id}`, undefined, 'warn');
     }
-    return { x: -9, y: -9 };
+    return { x: -1, y: -1 };
 }
 
 export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: ClientRect) {
@@ -95,7 +96,7 @@ export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: Clie
     } else {
         log('DOM', `Unable to find SVG element`, undefined, 'warn');
     }
-    return { x: 0, y: 0 };
+    return { x: -1, y: -1 };
 }
 
 export function relativeSizeOfElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
