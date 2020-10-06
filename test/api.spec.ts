@@ -75,12 +75,13 @@ describe('API Methods', () => {
         });
 
         it('should add a new viewer with the given details', async () => {
+            const el = document.createElement('div');
             (window as any).fetch = jest.fn(() => ({ text: async () => '' }))
-            const id = await API.createViewer({ url: '1' });
+            const id = await API.createViewer({ element: el, url: '1' });
             expect(API.getViewer(id)).toBeInstanceOf(Viewer);
-            const id2 = await API.createViewer({ url: '2'});
+            const id2 = await API.createViewer({ element: el, url: '2'});
             expect(id).not.toBe(id2);
-            const id3 = await API.createViewer({ url: '1' });
+            const id3 = await API.createViewer({ element: el, url: '1' });
             expect(id).toBe(id3);
         });
     });

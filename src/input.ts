@@ -1,3 +1,7 @@
+/* istanbul ignore file */
+
+// TODO: Add tests for this file
+
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { getViewer, resizeViewers, updateViewer } from './api';

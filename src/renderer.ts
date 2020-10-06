@@ -8,7 +8,7 @@ const _animation_frames: HashMap<number> = {};
 const _labels: HashMap<string> = {};
 const _features: HashMap<string> = {};
 
-export async function createView(viewer: Viewer) {
+export function createView(viewer: Viewer) {
     const element: HTMLElement | null = viewer.element;
     if (!element) throw new Error('No element set on viewer');
     const container_el = document.createElement('div');
@@ -37,16 +37,18 @@ export async function createView(viewer: Viewer) {
     const container_box = container_el.getBoundingClientRect();
     let box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
     const ratio = container_box.height / container_box.width;
-    ratio < (box.height / box.width) && svg_el.firstElementChild
-        ? (svg_el.firstElementChild as any).style.height = '100%'
-        : (svg_el.firstElementChild as any).style.width = '100%';
-    ratio < (box.height / box.width) && svg_el.firstElementChild
-        ? (svg_el.firstElementChild as any).style.width = 'auto'
-        : (svg_el.firstElementChild as any).style.height = 'auto';
+    if (svg_el.firstElementChild) {
+        ratio < (box.height / box.width)
+            ? (svg_el.firstElementChild as any).style.height = '100%'
+            : (svg_el.firstElementChild as any).style.width = '100%';
+        ratio < (box.height / box.width)
+            ? (svg_el.firstElementChild as any).style.width = 'auto'
+            : (svg_el.firstElementChild as any).style.height = 'auto';
+    }
     box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
     overlays_el.style.width = box.width + 'px';
     overlays_el.style.height = box.height + 'px';
-    viewer = await updateViewer(
+    viewer = updateViewer(
         viewer,
         { ratio: box.height / box.width, box: container_box },
         false
