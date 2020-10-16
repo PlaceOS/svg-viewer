@@ -43,7 +43,12 @@ export const STYLES = `
         justify-content: center;
     }
 
-    .svg-viewer .svg-overlays {
+    .svg-viewer .svg-output svg {
+        opacity: 0;
+    }
+
+    .svg-viewer .svg-overlays,
+    .svg-viewer canvas[id="svg-display"] {
         position: absolute;
         top: 50%;
         left: 50%;
