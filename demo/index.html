@@ -5,7 +5,7 @@
         <title>SVG Viewer Demo</title>
         <base href="/" />
         <style>
-            .html,
+            html,
             body {
                 position: absolute;
                 top: 0;
@@ -15,6 +15,13 @@
                 padding: 0;
                 margin: 0;
                 font-size: 16px;
+            }
+
+            @media screen and (max-width: 512px) {
+                html,
+                body {
+                    font-size: 24px;
+                }
             }
 
             button {
@@ -48,6 +55,8 @@
             }
 
             .overlay {
+                height: auto !important;
+                width: auto !important;
                 background-color: #fff;
                 border-radius: 4px;
                 padding: .5em 1em;
@@ -55,17 +64,21 @@
                             0 1px 1px 0 rgba(0,0,0, .14),
                             0 2px 1px -1px rgba(0,0,0, .12);
             }
+
+            label {
+                font-size: 1rem;
+            }
         </style>
         <script src="./demo.js"></script>
     </head>
     <body>
         <div id="svg-viewer"></div>
         <div class="overlays">
-            <div id="AU-NT" class="overlay">
+            <div id="NT" class="overlay">
                 Northern Territory<br>
                 Established in 1825
             </div>
-            <div id="AU-QLD" class="overlay">
+            <div id="QLD" class="overlay">
                 Queensland<br>
                 Established in 1859
             </div>
