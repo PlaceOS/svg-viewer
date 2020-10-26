@@ -24,15 +24,16 @@ export const STYLES = `
         overflow: hidden;
     }
 
-    .svg-viewer .render-container {
+    .svg-viewer__render-container {
         position: absolute;
         top: -450%;
         left: -450%;
         right: -450%;
         bottom: -450%;
+        will-change: transform;
     }
 
-    .svg-viewer .svg-output {
+    .svg-viewer__svg-output {
         position: absolute;
         top: 10em;
         left: 10em;
@@ -41,22 +42,26 @@ export const STYLES = `
         display: flex;
         align-items: center;
         justify-content: center;
+        transform: translateZ(0);
     }
 
-    .svg-viewer .svg-output svg {
+    .svg-viewer__svg-output svg {
         opacity: 0;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
     }
 
-    .svg-viewer .svg-overlays,
-    .svg-viewer canvas[id="svg-display"] {
+    .svg-viewer__svg-overlays,
+    .svg-viewer__canvas {
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate3d(-50%, -50%, 0);
         pointer-events: none;
     }
 
-    .svg-viewer label {
+    .svg-viewer__label {
         text-shadow: black 1px 1px;
         color: white;
         white-space: pre-line;
@@ -64,7 +69,7 @@ export const STYLES = `
         min-width: 10em;
     }
 
-    .svg-viewer .svg-overlay-item {
+    .svg-viewer__svg-overlay-item {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -74,20 +79,23 @@ export const STYLES = `
         transform-origin: center;
     }
 
-    .svg-viewer .svg-overlay-item.hover {
+    .svg-viewer__svg-overlay-item > * {
+        will-change: transform;
+    }
+
+    .svg-viewer__svg-overlay-item__hover {
         pointer-events: auto;
     }
 
-    .svg-viewer .svg-overlay-item.hover > * {
+    .svg-viewer__svg-overlay-item__hover > * {
         display: none;
     }
 
-    .svg-viewer .svg-overlay-item.hover:hover > * {
+    .svg-viewer__svg-overlay-item__hover:hover > * {
         display: initial;
     }
 
-    .svg-viewer svg {
-        max-width: 100%;
-        max-height: 100%;
+    .action-zone {
+        pointer-events: auto;
     }
 `;

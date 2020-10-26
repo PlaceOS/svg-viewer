@@ -1,4 +1,3 @@
-
 export interface HashMap<T = any> {
     [key: string]: T;
 }
@@ -42,7 +41,7 @@ export interface ViewAction {
     /** ID of the element to listen for actions */
     readonly id: string;
     /** Action to listen for on the SVG */
-    readonly action: 'click' | 'mousedown' | 'mouseup' | 'enter' | 'leave';
+    readonly action: 'click' | 'mousedown' | 'mouseup' | 'enter' | 'leave' | '*';
     /** Callback for event action */
     readonly callback: (e: Event, p?: Point) => void;
 }
@@ -50,5 +49,5 @@ export interface ViewAction {
 export interface ViewerStyles {
     [selector: string]: {
         [prop: string]: string | number;
-    }
+    };
 }
