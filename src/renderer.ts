@@ -84,6 +84,7 @@ export function renderView(viewer: Viewer) {
         renderActionZones(viewer);
         renderLabels(viewer);
         renderFeatures(viewer);
+        svg_el.style.display = 'none';
         _animation_frames[viewer.id] = 0;
     });
 }
@@ -141,8 +142,8 @@ export async function resizeView(viewer: Viewer) {
                 overlays_el.style.height = box.height * (10 / viewer.zoom) + 'px';
                 canvas_el.style.width = box.width * (10 / viewer.zoom) + 'px';
                 canvas_el.style.height = box.height * (10 / viewer.zoom) + 'px';
-                canvas_el.width = (box.width * (10 / viewer.zoom)) / 3;
-                canvas_el.height = (box.height * (10 / viewer.zoom)) / 3;
+                canvas_el.width = (box.width * (10 / viewer.zoom)) / 2.5;
+                canvas_el.height = (box.height * (10 / viewer.zoom)) / 2.5;
                 (svg_el.firstElementChild as any).style.display = 'none';
                 // Clear styles to redraw SVG to canvas
                 _styles[viewer.id] = '';
@@ -162,7 +163,9 @@ export function renderLabels(viewer: Viewer) {
     const labels_string = JSON.stringify(viewer.labels);
     if (labels_string !== _labels[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
+        const svg_el: any = viewer.element?.querySelector('.svg-viewer__svg-output svg');
         if (!overlay_el) return;
+        svg_el.style.display = 'initial';
         const label_el_list = overlay_el.querySelectorAll('label');
         /** Remove existing labels */
         label_el_list.forEach((label_el) => {
@@ -172,10 +175,7 @@ export function renderLabels(viewer: Viewer) {
         });
         let box = overlay_el.getBoundingClientRect();
         if (box.height === 0 || box.width === 0) {
-            box =
-                viewer.element
-                    ?.querySelector('.svg-viewer__svg-output svg')
-                    ?.getBoundingClientRect() || box;
+            box = svg_el?.getBoundingClientRect() || box;
         }
         for (const label of viewer.labels) {
             let coordinates = { x: 0, y: 0 };
@@ -208,7 +208,9 @@ export function renderFeatures(viewer: Viewer) {
     const features_string = JSON.stringify(viewer.features.map((i) => ({ ...i, content: '' })));
     if (features_string !== _features[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
+        const svg_el: any = viewer.element?.querySelector('.svg-viewer__svg-output svg');
         if (!overlay_el) return;
+        svg_el.style.display = 'initial';
         const feature_el_list = overlay_el.querySelectorAll('.feature');
         /** Remove existing features */
         feature_el_list.forEach((feature_el) => {
@@ -266,7 +268,9 @@ export function renderActionZones(viewer: Viewer) {
     const zone_string = JSON.stringify(viewer.features.map((i) => ({ ...i, content: '' })));
     if (zone_string !== _zones[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
+        const svg_el: any = viewer.element?.querySelector('.svg-viewer__svg-output svg');
         if (!overlay_el) return;
+        svg_el.style.display = 'initial';
         const zone_el_list = overlay_el.querySelectorAll('.action-zone');
         /** Remove existing features */
         zone_el_list.forEach((zone_el) => {
