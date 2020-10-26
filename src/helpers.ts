@@ -68,10 +68,11 @@ export function eventToPoint(event: MouseEvent | TouchEvent): Point {
 }
 
 export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
+    const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
     const element = svg_el?.querySelector(`#${cleanCssSelector(id)}`);
-    if (element && svg_el) {
-        const box = svg_box || svg_el.getBoundingClientRect();
+    if (element && svg_el && overlay_el) {
+        const box = svg_box || overlay_el.getBoundingClientRect();
         const el_box = element.getBoundingClientRect();
         const coords = {
             x: (el_box.left + el_box.width / 2 - box.left) / box.width,
@@ -85,9 +86,10 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
 }
 
 export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: ClientRect) {
+    const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
-    if (svg_el) {
-        const box = svg_box || svg_el.getBoundingClientRect();
+    if (svg_el && overlay_el) {
+        const box = svg_box || overlay_el.getBoundingClientRect();
         const coords = {
             x: (point.x - box.left) / box.width,
             y: (point.y - box.top) / box.height,
@@ -100,10 +102,11 @@ export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: Clie
 }
 
 export function relativeSizeOfElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
+    const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
     const element = svg_el?.querySelector(`#${cleanCssSelector(id)}`);
-    if (element && svg_el) {
-        const box = svg_box || svg_el.getBoundingClientRect();
+    if (element && svg_el && overlay_el) {
+        const box = svg_box || overlay_el.getBoundingClientRect();
         const el_box = element.getBoundingClientRect();
         return {
             w: el_box.width / box.width,
