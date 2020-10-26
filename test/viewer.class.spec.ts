@@ -42,6 +42,24 @@ describe('Viewer', () => {
         expect(viewer.zoom).toBe(1.95);
     });
 
+    it('should update center based off changes in zoom', () => {
+        expect(viewer.zoom).toBe(1);
+        expect(viewer.center).toEqual({ x: .5, y: .5 });
+        viewer = new Viewer({ ...viewer, desired_zoom: 1.50, desired_center: { x: 1, y: 1 } });
+        expect(viewer.zoom).toBe(1.05);
+        expect(viewer.center).toEqual({ x: .55, y: .55 });
+        viewer = new Viewer({ ...viewer });
+        expect(viewer.zoom).toBe(1.1);
+        expect(viewer.center).toEqual({ x: .6, y: .6 });
+        viewer = new Viewer({ ...viewer });
+        expect(viewer.zoom).toBe(1.15);
+        expect(viewer.center).toEqual({ x: .65, y: .65 });
+        viewer = new Viewer({ ...viewer });
+        expect(viewer.zoom).toBe(1.2);
+        expect(viewer.center).toEqual({ x: .7, y: .7 });
+
+    });
+
     it('should update center towards desired', () => {
         expect(viewer.center).toEqual({ x: .5, y: .5 });
         viewer = new Viewer({ ...viewer, desired_center: { x: .525, y: .525 } });

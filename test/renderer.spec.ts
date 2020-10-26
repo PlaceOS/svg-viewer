@@ -18,9 +18,9 @@ describe('Rendering Methods', () => {
             Renderer.createView(view);
             expect(el.querySelector('.svg-viewer')).toBeTruthy();
             expect(el.querySelector('style')).toBeTruthy();
-            expect(el.querySelector('.render-container')).toBeTruthy();
-            expect(el.querySelector('.svg-overlays')).toBeTruthy();
-            expect(el.querySelector('.svg-output')).toBeTruthy();
+            expect(el.querySelector('.svg-viewer__render-container')).toBeTruthy();
+            expect(el.querySelector('.svg-viewer__svg-overlays')).toBeTruthy();
+            expect(el.querySelector('.svg-viewer__svg-output')).toBeTruthy();
         });
 
         it('should handle no SVG data', () => {
