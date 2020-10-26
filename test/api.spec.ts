@@ -31,9 +31,7 @@ describe('API Methods', () => {
         it('should return the viewer with the given ID', (done) => {
             expect.assertions(2);
             let count = 0;
-            console.log(API._svg_viewers.getValue());
             API.listenToViewerChanges('1').subscribe((viewer) => {
-                console.log('Count:', count);
                 if (count === 0) {
                     expect(viewer.zoom).toBe(1.5);
                     setTimeout(() => API._svg_viewers.next([new Viewer({ id: '1', zoom: 2 })]));

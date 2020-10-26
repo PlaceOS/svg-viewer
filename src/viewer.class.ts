@@ -1,6 +1,14 @@
 import { Md5 } from 'ts-md5';
 
-import { ViewerFeature, ViewerFocusFeature, ViewerLabel, Point, ViewerStyles, ViewAction, ViewerOptions } from './types';
+import {
+    ViewerFeature,
+    ViewerFocusFeature,
+    ViewerLabel,
+    Point,
+    ViewerStyles,
+    ViewAction,
+    ViewerOptions,
+} from './types';
 
 /**
  * @hidden
@@ -52,6 +60,8 @@ export class Viewer {
     /**  */
     public readonly options: ViewerOptions;
 
+    public readonly updated_count: number;
+
     constructor(_data: Partial<Viewer>) {
         this.id = _data.id || `map-${Math.floor(Math.random() * 999_999)}`;
         this.url = _data.url || `local-${Md5.hashAsciiStr(_data.svg_data || '')}`;
@@ -76,12 +86,14 @@ export class Viewer {
         this.desired_zoom = _data.desired_zoom || _data.zoom || this.zoom;
         this.desired_center = {
             x: _data.desired_center?.x || this.center.x,
-            y: _data.desired_center?.y || this.center.y
+            y: _data.desired_center?.y || this.center.y,
         };
+        this.updated_count = (_data.updated_count || 0) + 1;
         if (this.zoom !== this.desired_zoom) {
             const direction = this.desired_zoom - this.zoom >= 0 ? 1 : -1;
             const change = Math.min(0.05, Math.abs(this.desired_zoom - this.zoom));
-            const ratio = Math.round((change / (this.desired_zoom - this.zoom)) * 1000) / 1000;
+            const ratio =
+                Math.round((change / Math.abs(this.desired_zoom - this.zoom)) * 1000) / 1000;
             this.zoom = change === 0.05 ? this.zoom + direction * change : this.desired_zoom;
             this.center = {
                 x: this.center.x + (this.desired_center.x - this.center.x) * ratio,
@@ -91,14 +103,14 @@ export class Viewer {
             this.desired_center.x !== this.center.x ||
             this.desired_center.y !== this.center.y
         ) {
-            const x_direction = (this.desired_center.x - this.center.x) >= 0 ? 1 : -1;
-            const y_direction = (this.desired_center.y - this.center.y) >= 0 ? 1 : -1;
+            const x_direction = this.desired_center.x - this.center.x >= 0 ? 1 : -1;
+            const y_direction = this.desired_center.y - this.center.y >= 0 ? 1 : -1;
             const x_change = Math.min(0.01, Math.abs(this.desired_center.x - this.center.x));
             const ratio = x_change / Math.abs(this.desired_center.x - this.center.x);
             const y_change = ratio * Math.abs(this.desired_center.y - this.center.y);
             this.center = {
-                x: this.center.x + (x_direction * x_change),
-                y: this.center.y + (y_direction * y_change)
+                x: this.center.x + x_direction * x_change,
+                y: this.center.y + y_direction * y_change,
             };
         }
         this.needs_update =
