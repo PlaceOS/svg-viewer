@@ -42,7 +42,10 @@ export function createView(viewer: Viewer) {
     svg_el.classList.add('svg-viewer__svg-output');
     svg_el.id = 'svg-output';
     svg_el.innerHTML = viewer.svg_data;
-    svg_el.appendChild(canvas_el);
+    const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
+    overlays_el.style.width = `${view_box.width}px`;
+    overlays_el.style.height = `${view_box.height}px`;
+    overlays_el.appendChild(canvas_el);
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
     const container_box = container_el.getBoundingClientRect();
@@ -50,7 +53,6 @@ export function createView(viewer: Viewer) {
     listenForViewActions(viewer);
     listenForResize();
     resizeView(viewer);
-    renderView(viewer);
 }
 
 export function renderView(viewer: Viewer) {
@@ -62,8 +64,6 @@ export function renderView(viewer: Viewer) {
         if (!element) throw new Error('No element set on viewer');
         const styles_el: HTMLDivElement = element.querySelector('style') as any;
         let styles = ``;
-        const svg_el: HTMLDivElement = element.querySelector('svg') as any;
-        if (!svg_el) throw new Error('No SVG set on viewer');
         const render_el: HTMLDivElement = element.querySelector(
             '.svg-viewer__render-container'
         ) as any;
@@ -84,29 +84,33 @@ export function renderView(viewer: Viewer) {
         renderActionZones(viewer);
         renderLabels(viewer);
         renderFeatures(viewer);
-        svg_el.style.display = 'none';
         _animation_frames[viewer.id] = 0;
     });
 }
 
 export function renderToCanvas(viewer: Viewer) {
-    const style_string = JSON.stringify(viewer.styles);
+    const style_string = JSON.stringify(viewer.styles) || ' ';
     if (style_string !== _styles[viewer.id]) {
         const element: HTMLElement | null = viewer.element;
         if (!element) throw new Error('No element set on viewer');
         const canvas: HTMLCanvasElement | null = element.querySelector('.svg-viewer__canvas');
+        const svg_el: HTMLDivElement = element.querySelector('.svg-viewer__svg-output') as any;
         if (!canvas) throw new Error('No canvas created for viewer');
+        const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
         const img: HTMLImageElement = document.createElement('img')!;
         const styles = styleMapToString(viewer.id, viewer.styles, false);
-        const svg_string = `${viewer.svg_data}`.replace(
+        let svg_string = `${viewer.svg_data}`.replace(
             /[^?]>/,
             `$&<defs><style>${styles}</style></defs>`
         );
+        svg_string = /<svg[^>]*width="[^>]*>/.test(svg_string)
+            ? svg_string
+            : svg_string.replace(`<svg`, `<svg width="${view_box.width}" height="${view_box.height}" `);
         const svg64 = btoa(svg_string);
         const b64Start = 'data:image/svg+xml;base64,';
         const image64 = b64Start + svg64;
         img.onload = () =>
-            canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
         img.src = image64;
         _styles[viewer.id] = style_string;
     }
@@ -118,33 +122,27 @@ export async function resizeView(viewer: Viewer) {
         () => {
             const element: HTMLElement | null = viewer.element;
             if (!element) throw new Error('No element set on viewer');
-            const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
             const overlays_el: HTMLDivElement = element.querySelector(
                 '.svg-viewer__svg-overlays'
             ) as any;
+            const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
             const svg_el: HTMLDivElement = element.querySelector('.svg-viewer__svg-output') as any;
             const canvas_el: HTMLCanvasElement = element.querySelector('canvas') as any;
             const container_box = container_el.getBoundingClientRect();
-            (svg_el.firstElementChild as any).style.display = 'initial';
-            (svg_el.firstElementChild as any).style.height = '';
-            (svg_el.firstElementChild as any).style.width = '512px';
             requestAnimationFrame(async () => {
-                let box = svg_el.firstElementChild?.getBoundingClientRect() || {
-                    height: 1,
-                    width: 1,
-                };
                 const ratio = container_box.height / container_box.width;
-                const ratio_svg = box.height / box.width;
+                const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
+                const ratio_svg = view_box.height / view_box.width;
                 (svg_el.firstElementChild as any).style.width =
                     Math.min(100, 100 * (ratio / ratio_svg)) + '%';
-                box = svg_el.firstElementChild?.getBoundingClientRect() || { height: 1, width: 1 };
+                const width = (container_box.width - 32) * Math.min(1, ratio / ratio_svg);
+                const box = { width, height: width * ratio_svg };
                 overlays_el.style.width = box.width * (10 / viewer.zoom) + 'px';
                 overlays_el.style.height = box.height * (10 / viewer.zoom) + 'px';
                 canvas_el.style.width = box.width * (10 / viewer.zoom) + 'px';
                 canvas_el.style.height = box.height * (10 / viewer.zoom) + 'px';
-                canvas_el.width = (box.width * (10 / viewer.zoom)) / 2.5;
-                canvas_el.height = (box.height * (10 / viewer.zoom)) / 2.5;
-                (svg_el.firstElementChild as any).style.display = 'none';
+                canvas_el.width = box.width * 4;
+                canvas_el.height = box.height * 4;
                 // Clear styles to redraw SVG to canvas
                 _styles[viewer.id] = '';
                 viewer = await updateViewer(
@@ -173,10 +171,7 @@ export function renderLabels(viewer: Viewer) {
                 overlay_el.removeChild(label_el.parentNode);
             }
         });
-        let box = overlay_el.getBoundingClientRect();
-        if (box.height === 0 || box.width === 0) {
-            box = svg_el?.getBoundingClientRect() || box;
-        }
+        const box = overlay_el.getBoundingClientRect();
         for (const label of viewer.labels) {
             let coordinates = { x: 0, y: 0 };
             let for_value = '~Nothing~';
@@ -199,6 +194,7 @@ export function renderLabels(viewer: Viewer) {
             label_container_el.appendChild(label_el);
             overlay_el.appendChild(label_container_el);
         }
+        svg_el.style.display = 'none';
         log('RENDER', `Added ${viewer.labels.length} labels to view.`);
         _labels[viewer.id] = labels_string;
     }
@@ -218,13 +214,7 @@ export function renderFeatures(viewer: Viewer) {
                 overlay_el.removeChild(feature_el);
             }
         });
-        let box = overlay_el.getBoundingClientRect();
-        if (box.height === 0 || box.width === 0) {
-            box =
-                viewer.element
-                    ?.querySelector('.svg-viewer__svg-output svg')
-                    ?.getBoundingClientRect() || box;
-        }
+        const box = overlay_el.getBoundingClientRect();
         for (const feature of viewer.features) {
             if (!feature.content) continue;
             let coordinates = { x: 0, y: 0 };
@@ -259,6 +249,7 @@ export function renderFeatures(viewer: Viewer) {
             }
             overlay_el.appendChild(feature_container_el);
         }
+        svg_el.style.display = 'none';
         log('RENDER', `Added ${viewer.features.length} features to view.`);
         _features[viewer.id] = features_string;
     }
@@ -278,13 +269,7 @@ export function renderActionZones(viewer: Viewer) {
                 overlay_el.removeChild(zone_el);
             }
         });
-        let box = overlay_el.getBoundingClientRect();
-        if (box.height === 0 || box.width === 0) {
-            box =
-                viewer.element
-                    ?.querySelector('.svg-viewer__svg-output svg')
-                    ?.getBoundingClientRect() || box;
-        }
+        const box = overlay_el.getBoundingClientRect();
         for (const event of viewer.actions) {
             if (!event.action || !event.id || event.id === '*') continue;
             const zone_el = document.createElement('div');
@@ -303,6 +288,7 @@ export function renderActionZones(viewer: Viewer) {
             overlay_el.appendChild(zone_el);
         }
         _zones[viewer.id] = zone_string;
+        svg_el.style.display = 'none';
     }
 }
 

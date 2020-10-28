@@ -30,7 +30,6 @@ export const STYLES = `
         left: -450%;
         right: -450%;
         bottom: -450%;
-        will-change: transform;
     }
 
     .svg-viewer__svg-output {
@@ -52,8 +51,7 @@ export const STYLES = `
         max-height: 100%;
     }
 
-    .svg-viewer__svg-overlays,
-    .svg-viewer__canvas {
+    .svg-viewer__svg-overlays {
         position: absolute;
         top: 50%;
         left: 50%;

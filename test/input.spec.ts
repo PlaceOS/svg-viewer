@@ -12,6 +12,7 @@ describe('User Input Methods', () => {
     describe('listenForResize', () => {
 
     });
+
     describe('listenForViewActions', () => {
 
     });
