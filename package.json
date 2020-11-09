@@ -3,9 +3,10 @@
   "license": "MIT",
   "name": "@yuion/svg-viewer",
   "author": "Alex Sorafumo <alex@yuion.net>",
-  "module": "dist/esm/index.js",
-  "main": "dist/cjs/index.js",
-  "typings": "dist/esm/index.d.ts",
+  "source": "src/index.ts",
+  "main": "dist/svg-viewer.js",
+  "module": "dist/svg-viewer.module.js",
+  "unpkg": "dist/svg-viewer.umd.js",
   "files": [
     "dist",
     "src"
@@ -18,7 +19,8 @@
     "url": "https://github.com/MrYuion/svg-viewer.git"
   },
   "scripts": {
-    "build": "node ./clean.js && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
+    "build": "node ./clean.js && microbundle",
+    "dev": "microbundle watch",
     "docs": "typedoc --excludePrivate --out docs --target es6 --theme minimal --mode file src",
     "test": "jest --coverage",
     "test:watch": "jest --coverage --watch",
@@ -71,6 +73,7 @@
     "husky": "^4.2.5",
     "jest": "^26.2.2",
     "jest-config": "^26.2.2",
+    "microbundle": "^0.12.4",
     "rxjs": "^6.6.2",
     "semantic-release": "^17.1.2",
     "ts-jest": "^26.1.4",

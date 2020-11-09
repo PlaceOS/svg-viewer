@@ -1,6 +1,5 @@
 import 'regenerator-runtime/runtime';
-import { createViewer, getViewer, updateViewer } from '../dist/esm/api.js';
-import { applyGlobalStyles } from '../dist/esm/root-styles.js';
+import { applyGlobalStyles, createViewer, getViewer, updateViewer } from '../dist/svg-viewer.module.js';
 
 window.debug = true;
 
