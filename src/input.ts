@@ -4,7 +4,7 @@
 
 import { BehaviorSubject, fromEvent, merge, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { getViewer, resizeViewers, updateViewer } from './api';
+import { resizeViewers, updateViewer } from './api';
 import { clearAsyncTimeout, timeout } from './async';
 import {
     calculateCenterFromZoomOffset,
@@ -14,6 +14,7 @@ import {
     eventToPoint,
     log,
 } from './helpers';
+import { getViewer } from './store';
 
 import { HashMap, Point } from './types';
 import { Viewer } from './viewer.class';
@@ -46,19 +47,22 @@ let _start_point: Point;
 /** Starting distance of the current pinch action */
 let _distance: number;
 
+let _mousemove: any;
+let _touchmove: any;
+
 const DEFAULT_ACTION_TYPES = [
     'click',
     'mousedown',
     'mouseup',
     'touchstart',
-    'touchmove',
     'touchend',
-    'mousemove',
     'mousewheel',
     'wheel',
 ];
 
 let _listening_for_resize = false;
+
+window.addEventListener('blur', () => handlePinchAndPanEnd());
 
 export function focusOnFeature(viewer: Viewer) {
     const _focus_string = JSON.stringify(viewer.focus);
@@ -103,20 +107,16 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
         const e: any = event;
         e.preventDefault();
         e.stopPropagation();
+        handleCustomEvents(details);
         switch (type) {
             case 'click':
                 if (!_panning && !_pinching) {
-                    handleCustomEvents(details);
                     handleViewClick(id, e);
                 }
                 break;
             case 'touchstart':
             case 'mousedown':
                 e.touches?.length >= 2 ? handlePinchStart(id, e) : handlePanStart(id, e);
-                break;
-            case 'touchmove':
-            case 'mousemove':
-                _pinching ? handlePinch(id, e) : _panning ? handlePanning(id, e) : '';
                 break;
             case 'touchend':
             case 'mouseup':
@@ -155,8 +155,17 @@ export function handlePanStart(id: string, event: MouseEvent) {
     if (_pinching) return;
     log('INPUT', 'Starting panning...');
     const view = getViewer(id);
+    if (_mousemove) window.removeEventListener('mousemove', _mousemove);
+    if (_touchmove) window.removeEventListener('touchmove', _touchmove);
     if (view && !view.options.disable_pan) {
         _start_point = eventToPoint(event);
+        if (event instanceof MouseEvent) {
+            _mousemove = (e: MouseEvent) => handlePanning(id, e, _start_point);
+            window.addEventListener('mousemove', _mousemove);
+        } else {
+            _touchmove = (e: MouseEvent) => handlePanning(id, e, _start_point);
+            window.addEventListener('touchmove', _touchmove);
+        }
         timeout('pan_start', () => (_panning = true), 200);
     }
 }
@@ -190,6 +199,7 @@ export function handlePanning(id: string, event: MouseEvent, start: Point = _sta
 
 export function handlePinchStart(id: string, event: TouchEvent) {
     log('INPUT', 'Starting pinching...');
+    if (_touchmove) window.removeEventListener('touchmove', _touchmove);
     const view = getViewer(id);
     _pinching = true;
     if (view && !view.options.disable_zoom) {
@@ -198,6 +208,10 @@ export function handlePinchStart(id: string, event: TouchEvent) {
             { x: event.touches[1].clientX, y: event.touches[1].clientY },
         ];
         _distance = distanceBetween(points[0], points[1]);
+        if (!(event instanceof MouseEvent)) {
+            _touchmove = (e: TouchEvent) => e.touches.length >= 2 ? handlePinch(id, e, _distance) : '';
+            window.addEventListener('touchmove', _touchmove);
+        }
     }
 }
 
@@ -226,6 +240,8 @@ export function handlePinchAndPanEnd() {
         () => {
             _pinching = false;
             _panning = false;
+            if (_mousemove) window.removeEventListener('mousemove', _mousemove);
+            if (_touchmove) window.removeEventListener('touchmove', _touchmove);
         },
         50
     );
