@@ -100,7 +100,7 @@ export function renderToCanvas(viewer: Viewer) {
         const img: HTMLImageElement = document.createElement('img')!;
         const styles = styleMapToString(viewer.id, viewer.styles, false);
         let svg_string = `${viewer.svg_data}`.replace(
-            /[^?]>/,
+            /[^\?\-]>/,
             `$&<defs><style>${styles}</style></defs>`
         );
         svg_string = /<svg[^>]*width="[^>]*>/.test(svg_string)
@@ -141,8 +141,8 @@ export async function resizeView(viewer: Viewer) {
                 overlays_el.style.height = box.height * (10 / viewer.zoom) + 'px';
                 canvas_el.style.width = box.width * (10 / viewer.zoom) + 'px';
                 canvas_el.style.height = box.height * (10 / viewer.zoom) + 'px';
-                canvas_el.width = box.width * 4;
-                canvas_el.height = box.height * 4;
+                canvas_el.width = box.width * 6 * ratio;
+                canvas_el.height = box.height * 6 * ratio;
                 // Clear styles to redraw SVG to canvas
                 _styles[viewer.id] = '';
                 viewer = await updateViewer(

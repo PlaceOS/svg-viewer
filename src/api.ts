@@ -1,47 +1,21 @@
-import { BehaviorSubject, Observable } from 'rxjs';
-import { distinct, filter, map } from 'rxjs/operators';
 
 import { timeout, unsubscribeWith } from './async';
 import { createView, renderView, resizeView } from './renderer';
+import { del, getViewer, listViewers, replace } from './store';
 import { HashMap } from './types';
 import { Viewer } from './viewer.class';
 
-/**
- * @hidden
- */
-export const _svg_viewers = new BehaviorSubject<Viewer[]>([]);
-/**
- * @hidden
- * Mapping of custom action hash to viewer
- */
-export const _update_timers: HashMap<number> = {};
 /**
  * @hidden
  * Mapping of URLs to their respective SVG data
  */
 export const _svg_cache: HashMap<string> = {};
 
-export function getViewer(id: string): Viewer | undefined {
-    return _svg_viewers.getValue().find((viewer) => viewer.id === id);
-}
-
-/**
- * Get observable for changes made a specific viewer
- * @param id ID of the viewer to observe
- */
-export function listenToViewerChanges(id: string): Observable<Viewer> {
-    return _svg_viewers.pipe(
-        filter((list) => !!list.find((viewer) => viewer.id === id)),
-        map((list) => list.find((viewer) => viewer.id === id)),
-        distinct()
-    ) as any;
-}
-
 /**
  * Handle viewport changes with active viewers
  */
 export function resizeViewers() {
-    const viewer_list = _svg_viewers.getValue();
+    const viewer_list = listViewers();
     for (const viewer of viewer_list) {
         timeout(`resize-${viewer.id}`, () => resizeView(viewer));
     }
@@ -52,14 +26,14 @@ export function resizeViewers() {
  * @param options Definition of the view details
  */
 export async function createViewer(options: Partial<Viewer>) {
-    const view_list = _svg_viewers.getValue();
+    const view_list = listViewers();
     let viewer = view_list.find((v) => v.url === options.url);
     if (viewer) {
         return viewer.id;
     }
     const svg_data = options.svg_data || (await loadSVGData(options.url));
     viewer = new Viewer({ ...options, svg_data });
-    _svg_viewers.next([...view_list, viewer]);
+    replace(viewer);
     createView(viewer);
     return viewer.id;
 }
@@ -74,17 +48,14 @@ export function updateViewer(
     options: Partial<Viewer>,
     render: boolean = true
 ): Viewer {
-    const view_list = _svg_viewers.getValue();
+    const view_list = listViewers();
     viewer = view_list.find((v) => v.id === (viewer instanceof Viewer ? viewer.id : viewer))!;
     if (!(viewer instanceof Viewer)) throw new Error('Unable to find viewer');
     delete options.url;
     const updated_viewer = new Viewer({ ...(viewer as Viewer), ...options });
-    _svg_viewers.next(view_list.filter((v) => v.id !== updated_viewer.id).concat([updated_viewer]));
+    replace(updated_viewer)
     if (updated_viewer.needs_update) {
-        if (_update_timers[viewer.id]) {
-            clearTimeout(_update_timers[viewer.id]);
-        }
-        _update_timers[viewer.id] = setTimeout(() => updateViewer(updated_viewer, {}), 16) as any;
+        timeout(`${viewer.id}_updating`, () => updateViewer(updated_viewer, {}), 16);
     }
     if (render) {
         renderView(updated_viewer);
@@ -102,10 +73,9 @@ export function removeViewer(id: string) {
     const view_el = view.element?.querySelector('.svg-viewer');
     if (!view_el) return;
     view.element!.removeChild(view_el);
-    const viewer_list = _svg_viewers.getValue();
+    del(view);
     // Remove listeners for viewer
     unsubscribeWith(`${id}`);
-    _svg_viewers.next(viewer_list.filter((v) => v.id !== id));
 }
 
 /**
