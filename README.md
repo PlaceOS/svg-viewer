@@ -86,7 +86,7 @@ import { updateViewer } from '@yuion/svg-viewer';
 
 const view_id = 'id-of-my-viewer';
 const actions = [
-    { id: 'my-element-id', type: 'click', callback: (e) => doSomething() }
+    { id: 'my-element-id', action: 'click', callback: (e) => doSomething() }
 ];
 
 updateViewer(view_id, { actions });
