@@ -42,6 +42,8 @@ export interface ViewAction {
     readonly id: string;
     /** Action to listen for on the SVG */
     readonly action: 'click' | 'mousedown' | 'mouseup' | 'enter' | 'leave' | '*';
+    /** Whether an interaction area is needed for listening to */
+    readonly zone?: boolean;
     /** Callback for event action */
     readonly callback: (e: Event, p?: Point) => void;
 }

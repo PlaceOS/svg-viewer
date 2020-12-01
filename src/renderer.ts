@@ -276,7 +276,7 @@ export function renderActionZones(viewer: Viewer) {
             .forEach((el) => overlay_el.removeChild(el));
         const box = overlay_el.getBoundingClientRect();
         for (const event of viewer.actions) {
-            if (!event.action || !event.id || event.id === '*') continue;
+            if (!event.action || !event.id || event.id === '*' || event.zone === false) continue;
             const zone_el = document.createElement('div');
             zone_el.id = `${event.id}`;
             const coordinates = coordinatesForElement(viewer, event.id, box);
