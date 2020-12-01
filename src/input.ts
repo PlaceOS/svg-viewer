@@ -4,7 +4,6 @@
 
 import { BehaviorSubject, fromEvent, merge, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { resizeViewers, updateViewer } from './api';
 import { clearAsyncTimeout, timeout } from './async';
 import {
     calculateCenterFromZoomOffset,
@@ -14,7 +13,7 @@ import {
     eventToPoint,
     log,
 } from './helpers';
-import { getViewer } from './store';
+import { getViewer, postEvent, update } from './store';
 
 import { HashMap, Point } from './types';
 import { Viewer } from './viewer.class';
@@ -75,7 +74,7 @@ export function focusOnFeature(viewer: Viewer) {
             coordinates = viewer.focus.location;
         }
         _focus_feature_map[viewer.id] = _focus_string;
-        updateViewer(viewer, {
+        update(viewer, {
             desired_center: { x: 1 - coordinates.x, y: 1 - coordinates.y },
             desired_zoom: zoom,
         });
@@ -84,7 +83,7 @@ export function focusOnFeature(viewer: Viewer) {
 
 export function listenForResize() {
     if (_listening_for_resize) return;
-    window.addEventListener('resize', () => resizeViewers());
+    window.addEventListener('resize', () => postEvent('resize'));
     window.addEventListener('blur', () => handlePinchAndPanEnd());
     _listening_for_resize = true;
 }
@@ -107,13 +106,9 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
         const e: any = event;
         e.preventDefault();
         e.stopPropagation();
+        console.log('Action:', details);
         handleCustomEvents(details);
         switch (type) {
-            case 'click':
-                if (!_panning && !_pinching) {
-                    handleViewClick(id, e);
-                }
-                break;
             case 'touchstart':
             case 'mousedown':
                 e.touches?.length >= 2 ? handlePinchStart(id, e) : handlePanStart(id, e);
@@ -121,7 +116,6 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
             case 'touchend':
             case 'mouseup':
                 if (!_panning && !_pinching) {
-                    handleCustomEvents(details);
                     handleViewClick(id, e);
                 }
                 handlePinchAndPanEnd();
@@ -147,7 +141,7 @@ export function handleDoubleClick(id: string) {
     log('INPUT', 'Resetting zoom level and center position...');
     const view = getViewer(id);
     if (view) {
-        updateViewer(view, { desired_zoom: 1, desired_center: { x: 0.5, y: 0.5 } });
+        update(view, { desired_zoom: 1, desired_center: { x: 0.5, y: 0.5 } });
     }
 }
 
@@ -193,7 +187,7 @@ export function handlePanning(id: string, event: MouseEvent, start: Point = _sta
             ),
         };
         _start_point = point;
-        updateViewer(view, { center, desired_center: center });
+        update(view, { center, desired_center: center });
     }
 }
 
@@ -225,7 +219,7 @@ export function handlePinch(id: string, event: TouchEvent, distance: number = _d
         const dist = distanceBetween(points[0], points[1]);
         const zoom = Math.max(1, Math.min(10, (view.zoom * dist) / distance));
         _distance = dist;
-        updateViewer(view, {
+        update(view, {
             zoom,
             desired_zoom: zoom,
         });
@@ -261,7 +255,7 @@ export function handleScrolling(id: string, event: WheelEvent) {
             zoom === 1 || zoom === 10 || zoom === view.zoom
                 ? view.center
                 : calculateCenterFromZoomOffset(1 + delta, point, view.center);
-        updateViewer(view, {
+        update(view, {
             zoom,
             center,
             desired_zoom: zoom,
@@ -273,10 +267,12 @@ export function handleScrolling(id: string, event: WheelEvent) {
 export function handleCustomEvents(details: ViewerEvent) {
     const { id, type, event } = details;
     const viewer = getViewer(id);
+    console.log('Viewer:', viewer, details);
     if (!viewer || !viewer.actions?.length) return;
     const action = viewer.actions.find(
         (e) => e.action === type && (e.id === '*' || e.id === (event.target as any)?.id)
     );
+    console.log('Check for custom handler:', action, (event.target as any)?.id);
     if (!action) return;
     action.callback(event, coordinatesForPoint(viewer, eventToPoint(event as any)));
 }

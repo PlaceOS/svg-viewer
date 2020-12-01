@@ -1,7 +1,7 @@
-import { updateViewer } from './api';
-import { timeout } from './async';
+import { subscription, timeout } from './async';
 import { cleanCssSelector, coordinatesForElement, log, relativeSizeOfElement } from './helpers';
 import { focusOnFeature, listenForResize, listenForViewActions } from './input';
+import { listViewers, on_resize, update } from './store';
 import { HashMap, ViewerStyles } from './types';
 import { Viewer } from './viewer.class';
 
@@ -14,6 +14,16 @@ const _features: HashMap<string> = {};
 const _zones: HashMap<string> = {};
 /** Map of viewer to last rendered styles */
 const _styles: HashMap<string> = {};
+
+subscription(
+    'on_resize',
+    on_resize.subscribe(() => {
+        const viewer_list = listViewers();
+        for (const viewer of viewer_list) {
+            timeout(`resize-${viewer.id}`, () => resizeView(viewer));
+        }
+    })
+);
 
 export function createView(viewer: Viewer) {
     const element: HTMLElement | null = viewer.element;
@@ -49,7 +59,7 @@ export function createView(viewer: Viewer) {
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
     const container_box = container_el.getBoundingClientRect();
-    viewer = updateViewer(viewer, { box: container_box }, false);
+    viewer = update(viewer, { box: container_box });
     listenForViewActions(viewer);
     listenForResize();
     resizeView(viewer);
@@ -105,7 +115,10 @@ export function renderToCanvas(viewer: Viewer) {
         );
         svg_string = /<svg[^>]*width="[^>]*>/.test(svg_string)
             ? svg_string
-            : svg_string.replace(`<svg`, `<svg width="${view_box.width}" height="${view_box.height}" `);
+            : svg_string.replace(
+                  `<svg`,
+                  `<svg width="${view_box.width}" height="${view_box.height}" `
+              );
         const svg64 = btoa(svg_string);
         const b64Start = 'data:image/svg+xml;base64,';
         const image64 = b64Start + svg64;
@@ -145,11 +158,7 @@ export async function resizeView(viewer: Viewer) {
                 canvas_el.height = box.height * 6 * ratio;
                 // Clear styles to redraw SVG to canvas
                 _styles[viewer.id] = '';
-                viewer = await updateViewer(
-                    viewer,
-                    { ratio: box.height / box.width, box: container_box },
-                    false
-                );
+                viewer = update(viewer, { ratio: box.height / box.width, box: container_box });
                 renderView(viewer);
             });
         },
@@ -164,13 +173,11 @@ export function renderLabels(viewer: Viewer) {
         const svg_el: any = viewer.element?.querySelector('.svg-viewer__svg-output svg');
         if (!overlay_el) return;
         svg_el.style.display = 'initial';
-        const label_el_list = overlay_el.querySelectorAll('label');
+        const label_el_list: Element[] = Array.from(overlay_el.querySelectorAll('[label]'));
         /** Remove existing labels */
-        label_el_list.forEach((label_el) => {
-            if (label_el.parentNode) {
-                overlay_el.removeChild(label_el.parentNode);
-            }
-        });
+        label_el_list
+            .filter((el) => el.parentNode)
+            .forEach((el) => overlay_el.removeChild(el));
         const box = overlay_el.getBoundingClientRect();
         for (const label of viewer.labels) {
             let coordinates = { x: 0, y: 0 };
@@ -183,6 +190,7 @@ export function renderLabels(viewer: Viewer) {
                 for_value = `loc-${coordinates.x}-${coordinates.y}`;
             }
             const label_container_el = document.createElement('div');
+            label_container_el.setAttribute('label', 'true');
             label_container_el.classList.add('svg-viewer__svg-overlay-item');
             label_container_el.classList.add('label');
             label_container_el.style.top = `${coordinates.y * 100}%`;
@@ -207,13 +215,11 @@ export function renderFeatures(viewer: Viewer) {
         const svg_el: any = viewer.element?.querySelector('.svg-viewer__svg-output svg');
         if (!overlay_el) return;
         svg_el.style.display = 'initial';
-        const feature_el_list = overlay_el.querySelectorAll('.feature');
+        const feature_el_list: Element[] = Array.from(overlay_el.querySelectorAll('[feature]'));
         /** Remove existing features */
-        feature_el_list.forEach((feature_el) => {
-            if (feature_el.parentNode) {
-                overlay_el.removeChild(feature_el);
-            }
-        });
+        feature_el_list
+            .filter((el) => el.parentNode)
+            .forEach((el) => overlay_el.removeChild(el));
         const box = overlay_el.getBoundingClientRect();
         for (const feature of viewer.features) {
             if (!feature.content) continue;
@@ -230,6 +236,7 @@ export function renderFeatures(viewer: Viewer) {
                 coordinates = feature.location;
             }
             feature_container_el.classList.add('svg-viewer__svg-overlay-item');
+            feature_container_el.setAttribute('feature', 'true');
             feature_container_el.classList.add('feature');
             if (feature.hover) {
                 feature_container_el.classList.add('svg-viewer__svg-overlay-item__hover');
@@ -256,19 +263,17 @@ export function renderFeatures(viewer: Viewer) {
 }
 
 export function renderActionZones(viewer: Viewer) {
-    const zone_string = JSON.stringify(viewer.features.map((i) => ({ ...i, content: '' })));
+    const zone_string = JSON.stringify(viewer.actions.map((i) => ({ ...i, callback: '' })));
     if (zone_string !== _zones[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
         const svg_el: any = viewer.element?.querySelector('.svg-viewer__svg-output svg');
         if (!overlay_el) return;
         svg_el.style.display = 'initial';
-        const zone_el_list = overlay_el.querySelectorAll('.action-zone');
+        const zone_el_list: Element[] = Array.from(overlay_el.querySelectorAll('.action-zone'));
         /** Remove existing features */
-        zone_el_list.forEach((zone_el) => {
-            if (zone_el.parentNode) {
-                overlay_el.removeChild(zone_el);
-            }
-        });
+        zone_el_list
+            .filter((el) => el.parentNode && overlay_el.contains(el.parentNode))
+            .forEach((el) => overlay_el.removeChild(el));
         const box = overlay_el.getBoundingClientRect();
         for (const event of viewer.actions) {
             if (!event.action || !event.id || event.id === '*') continue;

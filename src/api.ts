@@ -1,7 +1,6 @@
-
-import { timeout, unsubscribeWith } from './async';
-import { createView, renderView, resizeView } from './renderer';
-import { del, getViewer, listViewers, replace } from './store';
+import { subscription, unsubscribeWith } from './async';
+import { createView, renderView } from './renderer';
+import { del, getViewer, listViewers, onViewerChange, replace, update } from './store';
 import { HashMap } from './types';
 import { Viewer } from './viewer.class';
 
@@ -10,16 +9,6 @@ import { Viewer } from './viewer.class';
  * Mapping of URLs to their respective SVG data
  */
 export const _svg_cache: HashMap<string> = {};
-
-/**
- * Handle viewport changes with active viewers
- */
-export function resizeViewers() {
-    const viewer_list = listViewers();
-    for (const viewer of viewer_list) {
-        timeout(`resize-${viewer.id}`, () => resizeView(viewer));
-    }
-}
 
 /**
  * Create a new SVG viewer
@@ -33,6 +22,10 @@ export async function createViewer(options: Partial<Viewer>) {
     }
     const svg_data = options.svg_data || (await loadSVGData(options.url));
     viewer = new Viewer({ ...options, svg_data });
+    subscription(
+        `${viewer.id}-render`,
+        onViewerChange(viewer.id).subscribe((view) => renderView(view))
+    );
     replace(viewer);
     createView(viewer);
     return viewer.id;
@@ -45,21 +38,9 @@ export async function createViewer(options: Partial<Viewer>) {
  */
 export function updateViewer(
     viewer: string | Viewer,
-    options: Partial<Viewer>,
-    render: boolean = true
+    options: Partial<Viewer>
 ): Viewer {
-    const view_list = listViewers();
-    viewer = view_list.find((v) => v.id === (viewer instanceof Viewer ? viewer.id : viewer))!;
-    if (!(viewer instanceof Viewer)) throw new Error('Unable to find viewer');
-    delete options.url;
-    const updated_viewer = new Viewer({ ...(viewer as Viewer), ...options });
-    replace(updated_viewer)
-    if (updated_viewer.needs_update) {
-        timeout(`${viewer.id}_updating`, () => updateViewer(updated_viewer, {}), 16);
-    }
-    if (render) {
-        renderView(updated_viewer);
-    }
+    const updated_viewer = update(viewer, options);
     return updated_viewer;
 }
 
@@ -71,7 +52,7 @@ export function removeViewer(id: string) {
     const view = getViewer(id);
     if (!view) return;
     const view_el = view.element?.querySelector('.svg-viewer');
-    if (!view_el) return;
+    if (!view_el || view.element?.contains(view_el)) return;
     view.element!.removeChild(view_el);
     del(view);
     // Remove listeners for viewer
