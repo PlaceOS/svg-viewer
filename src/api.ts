@@ -52,7 +52,7 @@ export function removeViewer(id: string) {
     const view = getViewer(id);
     if (!view) return;
     const view_el = view.element?.querySelector('.svg-viewer');
-    if (!view_el || view.element?.contains(view_el)) return;
+    if (!view_el) return;
     view.element!.removeChild(view_el);
     del(view);
     // Remove listeners for viewer
