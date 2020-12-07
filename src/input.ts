@@ -47,7 +47,9 @@ let _start_point: Point;
 let _distance: number;
 
 let _mousemove: any;
+let _mouseend: any;
 let _touchmove: any;
+let _touchend: any;
 
 const DEFAULT_ACTION_TYPES = [
     'click',
@@ -150,15 +152,21 @@ export function handlePanStart(id: string, event: MouseEvent) {
     log('INPUT', 'Starting panning...');
     const view = getViewer(id);
     if (_mousemove) window.removeEventListener('mousemove', _mousemove);
+    if (_mousemove) window.removeEventListener('mouseup', _mouseend);
     if (_touchmove) window.removeEventListener('touchmove', _touchmove);
+    if (_touchmove) window.removeEventListener('touchend', _touchend);
     if (view && !view.options.disable_pan) {
         _start_point = eventToPoint(event);
         if (event instanceof MouseEvent) {
             _mousemove = (e: MouseEvent) => handlePanning(id, e, _start_point);
+            _mouseend = () => handlePinchAndPanEnd();
             window.addEventListener('mousemove', _mousemove);
+            window.addEventListener('mouseup', _mouseend);
         } else {
             _touchmove = (e: MouseEvent) => handlePanning(id, e, _start_point);
+            _touchend = () => handlePinchAndPanEnd();
             window.addEventListener('touchmove', _touchmove);
+            window.addEventListener('touchend', _touchend);
         }
         timeout('pan_start', () => (_panning = true), 200);
     }
@@ -229,16 +237,13 @@ export function handlePinch(id: string, event: TouchEvent, distance: number = _d
 export function handlePinchAndPanEnd() {
     log('INPUT', 'Ending pinch/pan...');
     clearAsyncTimeout('pan_start');
-    timeout(
-        'pan_pinch_end',
-        () => {
-            _pinching = false;
-            _panning = false;
-            if (_mousemove) window.removeEventListener('mousemove', _mousemove);
-            if (_touchmove) window.removeEventListener('touchmove', _touchmove);
-        },
-        50
-    );
+    _pinching = false;
+    _panning = false;
+    if (_mousemove) window.removeEventListener('mousemove', _mousemove);
+    if (_mouseend) window.removeEventListener('mouseup', _mouseend);
+    if (_touchmove) window.removeEventListener('touchmove', _touchmove);
+    if (_touchend) window.removeEventListener('touchend', _touchend);
+    _mousemove = _mouseend = _touchmove = _touchend = null;
 }
 
 export function handleScrolling(id: string, event: WheelEvent) {
