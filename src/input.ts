@@ -108,7 +108,6 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
         const e: any = event;
         e.preventDefault();
         e.stopPropagation();
-        console.log('Action:', details);
         handleCustomEvents(details);
         switch (type) {
             case 'touchstart':
@@ -272,12 +271,10 @@ export function handleScrolling(id: string, event: WheelEvent) {
 export function handleCustomEvents(details: ViewerEvent) {
     const { id, type, event } = details;
     const viewer = getViewer(id);
-    console.log('Viewer:', viewer, details);
     if (!viewer || !viewer.actions?.length) return;
     const action = viewer.actions.find(
         (e) => e.action === type && (e.id === '*' || e.id === (event.target as any)?.id)
     );
-    console.log('Check for custom handler:', action, (event.target as any)?.id);
     if (!action) return;
     action.callback(event, coordinatesForPoint(viewer, eventToPoint(event as any)));
 }
