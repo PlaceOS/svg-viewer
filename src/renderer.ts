@@ -169,7 +169,6 @@ export function renderOverlays(viewer: Viewer): void {
     const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
     if (!overlay_el || !svg_el) return;
     const box = overlay_el.getBoundingClientRect();
-    console.log('Box:', box);
     if (!box.width)
         return timeout(`${viewer.id}|render-overlays`, () => renderOverlays(viewer), 50);
     svg_el.style.display = 'initial';
@@ -195,7 +194,7 @@ export function renderLabels(viewer: Viewer, box: ClientRect) {
             if (typeof label.location === 'string') {
                 coordinates = coordinatesForElement(viewer, label.location, box);
                 for_value = `#${label.location}`;
-            } else {
+            } else if (label.location?.y || label.location?.x) {
                 coordinates = label.location;
                 for_value = `loc-${coordinates.x}-${coordinates.y}`;
             }
@@ -236,7 +235,7 @@ export function renderFeatures(viewer: Viewer, box: ClientRect) {
                 if (feature.hover) {
                     size = relativeSizeOfElement(viewer, feature.location, box);
                 }
-            } else {
+            } else if (feature.location?.y || feature.location?.x) {
                 coordinates = feature.location;
             }
             feature_container_el.classList.add('svg-viewer__svg-overlay-item');
