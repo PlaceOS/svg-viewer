@@ -1,11 +1,19 @@
 import { subscription, timeout } from './async';
-import { cleanCssSelector, coordinatesForElement, log, relativeSizeOfElement } from './helpers';
+import {
+    cleanCssSelector,
+    coordinatesForElement,
+    generateCoordinateListForTree,
+    log,
+    relativeSizeOfElement,
+} from './helpers';
 import { focusOnFeature, listenForResize, listenForViewActions } from './input';
 import { listViewers, on_resize, update } from './store';
-import { HashMap, ViewerStyles } from './types';
+import { HashMap, Rect, ViewerStyles } from './types';
 import { Viewer } from './viewer.class';
 
 const _animation_frames: HashMap<number> = {};
+
+const _element_mappings: HashMap<HashMap<Rect>> = {};
 /** Map of viewer to last rendered labels */
 const _labels: HashMap<string> = {};
 /** Map of viewer to last rendered features */
@@ -60,9 +68,22 @@ export function createView(viewer: Viewer) {
     element.appendChild(container_el);
     const container_box = container_el.getBoundingClientRect();
     viewer = update(viewer, { box: container_box });
+    setupElementMapping(viewer);
     listenForViewActions(viewer);
     listenForResize();
     resizeView(viewer);
+}
+
+export function setupElementMapping(viewer: Viewer) {
+    requestAnimationFrame(() => {
+        const svg: HTMLElement = viewer.element?.querySelector('svg') as any;
+        if (!svg || !svg.clientWidth)
+            return timeout(`${viewer.id}-setup`, () => setupElementMapping(viewer), 100);
+        const element_map = _element_mappings[viewer.url] || generateCoordinateListForTree(svg);
+        _element_mappings[viewer.url] = element_map;
+        update(viewer, { mappings: element_map });
+        svg.style.display = 'none';
+    });
 }
 
 export function renderView(viewer: Viewer) {
@@ -171,12 +192,10 @@ export function renderOverlays(viewer: Viewer): void {
     const box = overlay_el.getBoundingClientRect();
     if (!box.width)
         return timeout(`${viewer.id}|render-overlays`, () => renderOverlays(viewer), 50);
-    svg_el.style.display = 'initial';
     requestAnimationFrame(() => {
         renderActionZones(viewer, box);
         renderLabels(viewer, box);
         renderFeatures(viewer, box);
-        svg_el.style.display = 'none';
     });
 }
 
@@ -192,7 +211,9 @@ export function renderLabels(viewer: Viewer, box: ClientRect) {
             let coordinates = { x: 0, y: 0 };
             let for_value = '~Nothing~';
             if (typeof label.location === 'string') {
-                coordinates = coordinatesForElement(viewer, label.location, box);
+                coordinates =
+                    viewer.mappings[label.location] ||
+                    coordinatesForElement(viewer, label.location, box);
                 for_value = `#${label.location}`;
             } else if (label.location?.y || label.location?.x) {
                 coordinates = label.location;
@@ -231,9 +252,13 @@ export function renderFeatures(viewer: Viewer, box: ClientRect) {
             const feature_container_el = document.createElement('div');
             if (typeof feature.location === 'string') {
                 feature_container_el.id = `${feature.location}`;
-                coordinates = coordinatesForElement(viewer, feature.location, box);
+                coordinates =
+                    viewer.mappings[feature.location] ||
+                    coordinatesForElement(viewer, feature.location, box);
                 if (feature.hover) {
-                    size = relativeSizeOfElement(viewer, feature.location, box);
+                    size =
+                        viewer.mappings[feature.location] ||
+                        relativeSizeOfElement(viewer, feature.location, box);
                 }
             } else if (feature.location?.y || feature.location?.x) {
                 coordinates = feature.location;
@@ -278,8 +303,9 @@ export function renderActionZones(viewer: Viewer, box: ClientRect) {
             if (!event.action || !event.id || event.id === '*' || event.zone === false) continue;
             const zone_el = document.createElement('div');
             zone_el.id = `${event.id}`;
-            const coordinates = coordinatesForElement(viewer, event.id, box);
-            const size = relativeSizeOfElement(viewer, event.id, box);
+            const coordinates =
+                viewer.mappings[event.id] || coordinatesForElement(viewer, event.id, box);
+            const size = viewer.mappings[event.id] || relativeSizeOfElement(viewer, event.id, box);
             zone_el.classList.add('svg-viewer__svg-overlay-item');
             zone_el.classList.add('action-zone');
             zone_el.style.top = `${coordinates.y * 100}%`;

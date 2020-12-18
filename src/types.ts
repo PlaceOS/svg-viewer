@@ -1,10 +1,13 @@
-export interface HashMap<T = any> {
-    [key: string]: T;
-}
 
+export type HashMap<T = any> = Record<string, T>;
 export interface Point {
     readonly x: number;
     readonly y: number;
+}
+
+export interface Rect extends Point {
+    readonly w: number;
+    readonly h: number;
 }
 
 export interface ViewerOptions {

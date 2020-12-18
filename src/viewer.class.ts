@@ -8,6 +8,8 @@ import {
     ViewerStyles,
     ViewAction,
     ViewerOptions,
+    HashMap,
+    Rect,
 } from './types';
 
 /**
@@ -62,6 +64,8 @@ export class Viewer {
 
     public readonly updated_count: number;
 
+    public readonly mappings: HashMap<Rect>;
+
     constructor(_data: Partial<Viewer>) {
         this.id = _data.id || `map-${Math.floor(Math.random() * 999_999)}`;
         this.url = _data.url || `local-${Md5.hashAsciiStr(_data.svg_data || '')}`;
@@ -77,6 +81,7 @@ export class Viewer {
         this.ratio = _data.ratio || 1;
         this.focus = _data.focus || null;
         this.options = _data.options || {};
+        this.mappings = _data.mappings || {};
         this.box = {
             top: (_data.box || EMPTY_BOX).top,
             left: (_data.box || EMPTY_BOX).left,

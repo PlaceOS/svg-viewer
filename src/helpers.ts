@@ -1,4 +1,4 @@
-import { Point } from './types';
+import { HashMap, Point, Rect } from './types';
 import { Viewer } from './viewer.class';
 
 declare global {
@@ -65,6 +65,23 @@ export function eventToPoint(event: MouseEvent | TouchEvent): Point {
     return event.touches && event.touches.length > 0
         ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
         : { x: -1, y: -1 };
+}
+
+export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rect> {
+    if (!element) return {};
+    let mapping: HashMap<Rect> = {};
+    const p_box = element.getBoundingClientRect();
+    const children = element.querySelectorAll('[id]');
+    children.forEach(el => {
+        const box = el.getBoundingClientRect();
+        mapping[el.id] = {
+            x: Math.floor((box.left + box.width / 2 - p_box.left) / p_box.width * 1000) / 1000,
+            y: Math.floor((box.top + box.height / 2 - p_box.top) / p_box.height * 1000) / 1000,
+            w: Math.floor(box.width / p_box.width * 1000) / 1000,
+            h: Math.floor(box.height / p_box.height * 1000) / 1000
+        }
+    });
+    return mapping;
 }
 
 export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
