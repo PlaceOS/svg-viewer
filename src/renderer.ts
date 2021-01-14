@@ -1,11 +1,5 @@
 import { subscription, timeout } from './async';
-import {
-    cleanCssSelector,
-    coordinatesForElement,
-    generateCoordinateListForTree,
-    log,
-    relativeSizeOfElement,
-} from './helpers';
+import { cleanCssSelector, generateCoordinateListForTree, log } from './helpers';
 import { focusOnFeature, listenForResize, listenForViewActions } from './input';
 import { listViewers, on_resize, update } from './store';
 import { HashMap, Rect, ViewerStyles } from './types';
@@ -83,6 +77,7 @@ export function setupElementMapping(viewer: Viewer) {
         _element_mappings[viewer.url] = element_map;
         update(viewer, { mappings: element_map });
         svg.style.display = 'none';
+        renderOverlays(viewer);
     });
 }
 
@@ -118,8 +113,8 @@ export function renderView(viewer: Viewer) {
 }
 
 export function renderToCanvas(viewer: Viewer) {
-    const style_string = JSON.stringify(viewer.styles) || ' ';
-    if (style_string !== _styles[viewer.id]) {
+    const style_string = JSON.stringify({ ...viewer.styles }) || '';
+    if (style_string.localeCompare(_styles[viewer.id])) {
         const element: HTMLElement | null = viewer.element;
         if (!element) throw new Error('No element set on viewer');
         const canvas: HTMLCanvasElement | null = element.querySelector('.svg-viewer__canvas');
@@ -187,19 +182,20 @@ export async function resizeView(viewer: Viewer) {
 
 export function renderOverlays(viewer: Viewer): void {
     const svg_el = viewer.element?.querySelector(`svg`);
+    if (!Object.keys(viewer.mappings || {}).length) return;
     const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
     if (!overlay_el || !svg_el) return;
     const box = overlay_el.getBoundingClientRect();
     if (!box.width)
         return timeout(`${viewer.id}|render-overlays`, () => renderOverlays(viewer), 50);
     requestAnimationFrame(() => {
-        renderActionZones(viewer, box);
-        renderLabels(viewer, box);
-        renderFeatures(viewer, box);
+        renderActionZones(viewer);
+        renderLabels(viewer);
+        renderFeatures(viewer);
     });
 }
 
-export function renderLabels(viewer: Viewer, box: ClientRect) {
+export function renderLabels(viewer: Viewer) {
     const labels_string = JSON.stringify(viewer.labels);
     if (labels_string !== _labels[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
@@ -211,9 +207,7 @@ export function renderLabels(viewer: Viewer, box: ClientRect) {
             let coordinates = { x: 0, y: 0 };
             let for_value = '~Nothing~';
             if (typeof label.location === 'string') {
-                coordinates =
-                    viewer.mappings[label.location] ||
-                    coordinatesForElement(viewer, label.location, box);
+                coordinates = viewer.mappings[label.location] || coordinates;
                 for_value = `#${label.location}`;
             } else if (label.location?.y || label.location?.x) {
                 coordinates = label.location;
@@ -237,7 +231,7 @@ export function renderLabels(viewer: Viewer, box: ClientRect) {
     }
 }
 
-export function renderFeatures(viewer: Viewer, box: ClientRect) {
+export function renderFeatures(viewer: Viewer) {
     const features_string = JSON.stringify(viewer.features.map((i) => ({ ...i, content: '' })));
     if (features_string !== _features[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
@@ -252,13 +246,9 @@ export function renderFeatures(viewer: Viewer, box: ClientRect) {
             const feature_container_el = document.createElement('div');
             if (typeof feature.location === 'string') {
                 feature_container_el.id = `${feature.location}`;
-                coordinates =
-                    viewer.mappings[feature.location] ||
-                    coordinatesForElement(viewer, feature.location, box);
+                coordinates = viewer.mappings[feature.location] || coordinates;
                 if (feature.hover) {
-                    size =
-                        viewer.mappings[feature.location] ||
-                        relativeSizeOfElement(viewer, feature.location, box);
+                    size = viewer.mappings[feature.location] || size;
                 }
             } else if (feature.location?.y || feature.location?.x) {
                 coordinates = feature.location;
@@ -289,7 +279,7 @@ export function renderFeatures(viewer: Viewer, box: ClientRect) {
     }
 }
 
-export function renderActionZones(viewer: Viewer, box: ClientRect) {
+export function renderActionZones(viewer: Viewer) {
     const zone_string = JSON.stringify(viewer.actions.map((i) => ({ ...i, callback: '' })));
     if (zone_string !== _zones[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
@@ -303,9 +293,8 @@ export function renderActionZones(viewer: Viewer, box: ClientRect) {
             if (!event.action || !event.id || event.id === '*' || event.zone === false) continue;
             const zone_el = document.createElement('div');
             zone_el.id = `${event.id}`;
-            const coordinates =
-                viewer.mappings[event.id] || coordinatesForElement(viewer, event.id, box);
-            const size = viewer.mappings[event.id] || relativeSizeOfElement(viewer, event.id, box);
+            const coordinates = viewer.mappings[event.id] || { x: 0, y: 0 };
+            const size = viewer.mappings[event.id] || { w: 0, h: 0 };
             zone_el.classList.add('svg-viewer__svg-overlay-item');
             zone_el.classList.add('action-zone');
             zone_el.style.top = `${coordinates.y * 100}%`;

@@ -8,10 +8,9 @@ declare global {
 }
 
 /** Available console output streams. */
-export type ConsoleStream = 'debug' | 'warn' | 'log' | 'error';
+export type ConsoleStream = 'debug' | 'warn' | 'log' | 'error'; // No testing needed for logging
 
-/* istanbul ignore next */ // No testing needed for logging
-/**
+/* istanbul ignore next */ /**
  * Log data to the browser console
  * @param type Type of message
  * @param msg Message body
@@ -72,14 +71,14 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
     let mapping: HashMap<Rect> = {};
     const p_box = element.getBoundingClientRect();
     const children = element.querySelectorAll('[id]');
-    children.forEach(el => {
+    children.forEach((el) => {
         const box = el.getBoundingClientRect();
         mapping[el.id] = {
-            x: Math.floor((box.left + box.width / 2 - p_box.left) / p_box.width * 1000) / 1000,
-            y: Math.floor((box.top + box.height / 2 - p_box.top) / p_box.height * 1000) / 1000,
-            w: Math.floor(box.width / p_box.width * 1000) / 1000,
-            h: Math.floor(box.height / p_box.height * 1000) / 1000
-        }
+            x: Math.floor(((box.left + box.width / 2 - p_box.left) / p_box.width) * 1000) / 1000,
+            y: Math.floor(((box.top + box.height / 2 - p_box.top) / p_box.height) * 1000) / 1000,
+            w: Math.floor((box.width / p_box.width) * 1000) / 1000,
+            h: Math.floor((box.height / p_box.height) * 1000) / 1000,
+        };
     });
     return mapping;
 }
@@ -144,4 +143,17 @@ export function calculateCenterFromZoomOffset(zoom_change: number, point: Point,
         x: Math.round((point.x + (center.x - point.x) / zoom_change) * 10000) / 10000,
         y: Math.round((point.y + (center.y - point.y) / zoom_change) * 10000) / 10000,
     };
+}
+
+export function basicHash(str: string) {
+    var hash = 0;
+    if (str.length == 0) {
+        return hash;
+    }
+    for (var i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
 }

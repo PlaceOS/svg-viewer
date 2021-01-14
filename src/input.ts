@@ -107,7 +107,6 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
         const { id, type, event } = details;
         const e: any = event;
         e.preventDefault();
-        e.stopPropagation();
         handleCustomEvents(details);
         switch (type) {
             case 'touchstart':
