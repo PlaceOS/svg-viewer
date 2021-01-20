@@ -196,14 +196,15 @@ export function renderOverlays(viewer: Viewer): void {
 }
 
 export function renderLabels(viewer: Viewer) {
-    const labels_string = JSON.stringify(viewer.labels);
+    const label_list = viewer.labels.filter(_ => !_.zoom_level || _.zoom_level <= viewer.zoom);
+    const labels_string = JSON.stringify(label_list);
     if (labels_string !== _labels[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
         if (!overlay_el) return;
         const label_el_list: Element[] = Array.from(overlay_el.querySelectorAll('[label]'));
         /** Remove existing labels */
         label_el_list.filter((el) => el.parentNode).forEach((el) => overlay_el.removeChild(el));
-        for (const label of viewer.labels) {
+        for (const label of label_list) {
             let coordinates = { x: 0, y: 0 };
             let for_value = '~Nothing~';
             if (typeof label.location === 'string') {
@@ -219,11 +220,13 @@ export function renderLabels(viewer: Viewer) {
             label_container_el.classList.add('label');
             label_container_el.style.top = `${coordinates.y * 100}%`;
             label_container_el.style.left = `${coordinates.x * 100}%`;
+            const div_el = document.createElement('div');
             const label_el = document.createElement('label');
             label_el.classList.add('svg-viewer__label');
             label_el.setAttribute('for', for_value);
             label_el.textContent = label.content;
-            label_container_el.appendChild(label_el);
+            div_el.appendChild(label_el);
+            label_container_el.appendChild(div_el);
             overlay_el.appendChild(label_container_el);
         }
         log('RENDER', `Added ${viewer.labels.length} labels to view.`);

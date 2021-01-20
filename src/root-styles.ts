@@ -65,6 +65,10 @@ export const STYLES = `
         white-space: pre-line;
         text-align: center;
         min-width: 10em;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 
     .svg-viewer__svg-overlay-item {
