@@ -49,6 +49,7 @@ export const STYLES = `
         height: auto;
         max-width: 100%;
         max-height: 100%;
+        width: 1000px;
     }
 
     .svg-viewer__svg-overlays {
@@ -69,6 +70,7 @@ export const STYLES = `
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+        z-index: 1
     }
 
     .svg-viewer__svg-overlay-item {

@@ -27,7 +27,7 @@ export async function createViewer(options: Partial<Viewer>) {
         onViewerChange(viewer.id).subscribe((view) => renderView(view))
     );
     replace(viewer);
-    createView(viewer);
+    await createView(viewer);
     return viewer.id;
 }
 
