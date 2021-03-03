@@ -1,7 +1,7 @@
 {
-  "version": "0.0.23-development",
+  "version": "0.0.1-dev",
   "license": "MIT",
-  "name": "@yuion/svg-viewer",
+  "name": "@placeos/svg-viewer",
   "author": "Alex Sorafumo <alex@yuion.net>",
   "source": "src/index.ts",
   "main": "dist/svg-viewer.js",
