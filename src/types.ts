@@ -22,6 +22,8 @@ export interface ViewerLabel {
     readonly location: string | Point;
     /** Minimum zoom level at which to show the label */
     readonly zoom_level?: number;
+    /** CSS classes to apply to the label element */
+    readonly css_class?: string[];
 }
 
 export interface ViewerFeature {

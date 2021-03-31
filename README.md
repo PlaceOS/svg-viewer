@@ -24,7 +24,8 @@ import { applyGlobalStyles } from '@placeos/svg-viewer';
 applyGlobalStyles();
 ```
 
-To create a new viewer use the create method. A DOM element and URL are required to create. Available options are the fields defined in the [Viewer](./src/viewer.class.ts) class.
+To create a new viewer use the create method. A DOM element and URL are required to create. 
+Available options are the fields defined in the [Viewer](./src/viewer.class.ts) class.
 
 ```Typescript
 import { createViewer } from '@placeos/svg-viewer';

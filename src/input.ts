@@ -54,8 +54,10 @@ let _touchend: any;
 const DEFAULT_ACTION_TYPES = [
     'click',
     'mousedown',
+    'mousemove',
     'mouseup',
     'touchstart',
+    'touchmove',
     'touchend',
     'mousewheel',
     'wheel',

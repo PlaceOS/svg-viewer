@@ -259,6 +259,9 @@ export function renderLabels(viewer: Viewer) {
             const label_el = document.createElement('label');
             label_el.classList.add('svg-viewer__label');
             label_el.setAttribute('for', for_value);
+            if (label.css_class?.length) {
+                label_el.classList.add(...label.css_class);
+            }
             label_el.textContent = label.content;
             div_el.appendChild(label_el);
             label_container_el.appendChild(div_el);
