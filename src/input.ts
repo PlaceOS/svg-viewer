@@ -71,7 +71,7 @@ export function focusOnFeature(viewer: Viewer) {
     const _focus_string = JSON.stringify(viewer.focus);
     if (viewer.focus && _focus_string !== _focus_feature_map[viewer.id]) {
         let coordinates = { x: 0, y: 0 };
-        const zoom = Math.max(1, Math.min(10, viewer.focus.zoom_level || 1));
+        const zoom = Math.max(0.5, Math.min(10, viewer.focus.zoom_level || 1));
         if (typeof viewer.focus.location === 'string') {
             coordinates = coordinatesForElement(viewer, viewer.focus.location);
         } else {
@@ -211,7 +211,8 @@ export function handlePinchStart(id: string, event: TouchEvent) {
         ];
         _distance = distanceBetween(points[0], points[1]);
         if (!(event instanceof MouseEvent)) {
-            _touchmove = (e: TouchEvent) => e.touches.length >= 2 ? handlePinch(id, e, _distance) : '';
+            _touchmove = (e: TouchEvent) =>
+                e.touches.length >= 2 ? handlePinch(id, e, _distance) : '';
             window.addEventListener('touchmove', _touchmove);
         }
     }
@@ -225,7 +226,7 @@ export function handlePinch(id: string, event: TouchEvent, distance: number = _d
             { x: event.touches[1].clientX, y: event.touches[1].clientY },
         ];
         const dist = distanceBetween(points[0], points[1]);
-        const zoom = Math.max(1, Math.min(10, (view.zoom * dist) / distance));
+        const zoom = Math.max(0.5, Math.min(10, (view.zoom * dist) / distance));
         _distance = dist;
         update(view, {
             zoom,
@@ -250,7 +251,7 @@ export function handleScrolling(id: string, event: WheelEvent) {
     const view = getViewer(id);
     if (view) {
         const delta = event.deltaY >= 0 ? -0.02 : 0.02;
-        const zoom = Math.min(10, Math.max(1, view.zoom * (1 + delta)));
+        const zoom = Math.min(10, Math.max(0.5, view.zoom * (1 + delta)));
         const box = view.element
             ?.querySelector('.svg-viewer__render-container')
             ?.getBoundingClientRect();
