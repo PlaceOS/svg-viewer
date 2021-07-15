@@ -200,13 +200,16 @@ export async function resizeView(viewer: Viewer) {
                     overlays_el.style.height = box.height * (10 / viewer.zoom) + 'px';
                     canvas_el.style.width = box.width * (10 / viewer.zoom) + 'px';
                     canvas_el.style.height = box.height * (10 / viewer.zoom) + 'px';
-                    const clipped_ratio = 3600 / (box.width * 10 * ratio);
-                    console.log('Clipped Dims:', clipped_ratio);
+                    let clipped_ratio = 512 / Math.min(window.innerHeight, window.innerWidth);
+                    if (clipped_ratio > 1) clipped_ratio = clipped_ratio * 2;
                     canvas_el.width = box.width * 10 * ratio * clipped_ratio;
                     canvas_el.height = box.height * 10 * ratio * clipped_ratio;
                     // Clear styles to redraw SVG to canvas
                     _styles[viewer.id] = '';
-                    viewer = update(viewer, { ratio: box.height / box.width, box: container_box });
+                    viewer = update(viewer, {
+                        ratio: box.height / box.width,
+                        box: container_box,
+                    });
                     await renderView(viewer);
                     _resize_resolves[viewer.id].forEach((res) => res());
                     _resize_resolves[viewer.id] = [];
