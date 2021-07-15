@@ -66,6 +66,10 @@ export class Viewer {
 
     public readonly mappings: HashMap<Rect>;
 
+    public contains(el_id: string) {
+        this.svg_data.includes(`id="${el_id}"`);
+    }
+
     constructor(_data: Partial<Viewer>) {
         this.id = _data.id || `map-${Math.floor(Math.random() * 999_999)}`;
         this.url = _data.url || `local-${Md5.hashAsciiStr(_data.svg_data || '')}`;
