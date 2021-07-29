@@ -267,6 +267,9 @@ export function renderLabels(viewer: Viewer) {
             if (label.css_class?.length) {
                 label_el.classList.add(...label.css_class);
             }
+            if (label.z_index) {
+                label_container_el.style.zIndex = label.z_index;
+            }
             label_el.textContent = label.content;
             div_el.appendChild(label_el);
             label_container_el.appendChild(div_el);
@@ -302,6 +305,9 @@ export function renderFeatures(viewer: Viewer) {
             feature_container_el.classList.add('svg-viewer__svg-overlay-item');
             feature_container_el.setAttribute('feature', 'true');
             feature_container_el.classList.add('feature');
+            if (feature.z_index) {
+                feature_container_el.style.zIndex = feature.z_index;
+            }
             if (feature.hover) {
                 feature_container_el.classList.add('svg-viewer__svg-overlay-item__hover');
             }

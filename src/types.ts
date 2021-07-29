@@ -1,4 +1,3 @@
-
 export type HashMap<T = any> = Record<string, T>;
 export interface Point {
     readonly x: number;
@@ -24,6 +23,8 @@ export interface ViewerLabel {
     readonly zoom_level?: number;
     /** CSS classes to apply to the label element */
     readonly css_class?: string[];
+    /** Z index to apply the the container element */
+    readonly z_index?: string;
 }
 
 export interface ViewerFeature {
@@ -33,6 +34,8 @@ export interface ViewerFeature {
     readonly hover?: boolean;
     /** Element ID or Coordinates to display the content */
     readonly location: string | Point;
+    /** Z index to apply the the container element */
+    readonly z_index?: string;
 }
 
 export interface ViewerFocusFeature {
