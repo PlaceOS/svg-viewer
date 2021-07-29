@@ -296,7 +296,7 @@ export function renderFeatures(viewer: Viewer) {
             if (typeof feature.location === 'string') {
                 feature_container_el.id = `${feature.location}`;
                 coordinates = viewer.mappings[feature.location] || coordinates;
-                if (feature.hover) {
+                if (feature.hover || feature.full_size) {
                     size = viewer.mappings[feature.location] || size;
                 }
             } else if (feature.location?.y || feature.location?.x) {

@@ -32,6 +32,8 @@ export interface ViewerFeature {
     readonly content: HTMLElement;
     /** Whether contents should only show on hover of location */
     readonly hover?: boolean;
+    /** Whether container element should be sized to match parent */
+    readonly full_size?: boolean;
     /** Element ID or Coordinates to display the content */
     readonly location: string | Point;
     /** Z index to apply the the container element */
