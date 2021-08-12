@@ -105,12 +105,13 @@ export function renderView(viewer: Viewer) {
         _animation_frames[viewer.id] = requestAnimationFrame(async () => {
             const element: HTMLElement | null = viewer.element;
             if (!element) throw new Error('No element set on viewer');
-            const styles_el: HTMLDivElement = element.querySelector('style') as any;
+            const styles_el: HTMLStyleElement | null = element.querySelector('style');
             let styles = ``;
-            const render_el: HTMLDivElement = element.querySelector(
+            const render_el: HTMLDivElement | null = element.querySelector(
                 '.svg-viewer__render-container'
-            ) as any;
+            );
             const scale = `scale(${viewer.zoom / 10})`;
+            if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
             render_el.style.transform = `translate3d(${
                 (viewer.center.x - 0.5) * (100 * (viewer.zoom / 10))
             }%, ${(viewer.center.y - 0.5) * (100 * (viewer.zoom / 10))}%, 0) ${scale} rotate(${
@@ -179,21 +180,24 @@ export async function resizeView(viewer: Viewer) {
             () => {
                 const element: HTMLElement | null = viewer.element;
                 if (!element) throw new Error('No element set on viewer');
-                const overlays_el: HTMLDivElement = element.querySelector(
+                const overlays_el: HTMLDivElement | null = element.querySelector(
                     '.svg-viewer__svg-overlays'
-                ) as any;
+                );
                 const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
-                const svg_el: HTMLDivElement = element.querySelector(
-                    '.svg-viewer__svg-output'
-                ) as any;
-                const canvas_el: HTMLCanvasElement = element.querySelector('canvas') as any;
+                const svg_el: HTMLDivElement | null =
+                    element.querySelector('.svg-viewer__svg-output');
+                const canvas_el = element.querySelector('canvas');
                 const container_box = container_el.getBoundingClientRect();
+                if (!overlays_el || !svg_el || !canvas_el)
+                    throw new Error('Viewer elements not ready yet.');
                 requestAnimationFrame(async () => {
                     const ratio = container_box.height / container_box.width;
                     const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
                     const ratio_svg = view_box.height / view_box.width;
-                    (svg_el.firstElementChild as any).style.width =
-                        Math.min(100, 100 * (ratio / ratio_svg)) + '%';
+                    if (svg_el.firstElementChild) {
+                        (svg_el.firstElementChild as any).style.width =
+                            Math.min(100, 100 * (ratio / ratio_svg)) + '%';
+                    }
                     const width = (container_box.width - 32) * Math.min(1, ratio / ratio_svg);
                     const box = { width, height: width * ratio_svg };
                     overlays_el.style.width = box.width * (10 / viewer.zoom) + 'px';
@@ -281,7 +285,9 @@ export function renderLabels(viewer: Viewer) {
 }
 
 export function renderFeatures(viewer: Viewer) {
-    const features_string = JSON.stringify(viewer.features.map((i) => ({ ...i, content: '' })));
+    const features_string = JSON.stringify(
+        viewer.features.map((i) => ({ ...i, content: '', data: '' }))
+    );
     if (features_string !== _features[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
         if (!overlay_el) return console.log('Unable to get overlay element.');
