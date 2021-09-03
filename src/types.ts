@@ -38,6 +38,8 @@ export interface ViewerFeature {
     readonly location: string | Point;
     /** Z index to apply the the container element */
     readonly z_index?: string;
+    /** Data associated with the feature */
+    readonly data?: Record<string, unknown>;
 }
 
 export interface ViewerFocusFeature {

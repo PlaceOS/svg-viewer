@@ -1,5 +1,10 @@
 import { subscription, timeout } from './async';
-import { cleanCssSelector, generateCoordinateListForTree, log } from './helpers';
+import {
+    cleanCssSelector,
+    generateCoordinateListForTree,
+    log,
+    simplifyDataObject,
+} from './helpers';
 import { focusOnFeature, listenForResize, listenForViewActions } from './input';
 import { listViewers, on_resize, update } from './store';
 import { HashMap, Rect, ViewerStyles } from './types';
@@ -206,10 +211,11 @@ export async function resizeView(viewer: Viewer) {
                     canvas_el.style.height = box.height * (10 / viewer.zoom) + 'px';
                     let clipped_ratio = 1;
                     console.log('Ratio:', clipped_ratio, box);
-                    let size = (box.width * 10 * clipped_ratio) * (box.height * 10 * clipped_ratio);
-                    while (size >= (1920 * 1080 * 8)) { // Canvas size limit on certain browsers
-                        clipped_ratio = clipped_ratio * .95;
-                        size = (box.width * 10 * clipped_ratio) * (box.height * 10 * clipped_ratio);
+                    let size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);
+                    while (size >= 1920 * 1080 * 8) {
+                        // Canvas size limit on certain browsers
+                        clipped_ratio = clipped_ratio * 0.95;
+                        size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);
                     }
                     canvas_el.width = box.width * 10 * clipped_ratio;
                     canvas_el.height = box.height * 10 * clipped_ratio;
@@ -292,7 +298,7 @@ export function renderLabels(viewer: Viewer) {
 
 export function renderFeatures(viewer: Viewer) {
     const features_string = JSON.stringify(
-        viewer.features.map((i) => ({ ...i, content: '', data: '' }))
+        viewer.features.map((i) => ({ ...i, content: '', data: simplifyDataObject(i.data) as any }))
     );
     if (features_string !== _features[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');

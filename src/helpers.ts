@@ -157,3 +157,14 @@ export function basicHash(str: string) {
     }
     return hash;
 }
+
+export function simplifyDataObject(obj: any) {
+    if (!obj) return '';
+    const data = { ...obj };
+    for (const key in data) {
+        if (data[key] instanceof Object) {
+            data[key] = `${data[key]}`;
+        }
+    }
+    return data;
+}
