@@ -56,7 +56,7 @@ export const STYLES = `
         position: absolute;
         top: 50%;
         left: 50%;
-        transform: translate3d(-50%, -50%, 0);
+        transform: translate(-50%, -50%);
         pointer-events: none;
     }
 

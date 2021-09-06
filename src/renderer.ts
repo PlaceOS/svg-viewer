@@ -117,11 +117,12 @@ export function renderView(viewer: Viewer) {
             );
             const scale = `scale(${viewer.zoom / 10})`;
             if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
-            render_el.style.transform = `translate3d(${
-                (viewer.center.x - 0.5) * (100 * (viewer.zoom / 10))
-            }%, ${(viewer.center.y - 0.5) * (100 * (viewer.zoom / 10))}%, 0) ${scale} rotate(${
-                viewer.rotate
-            }deg)`;
+            const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom / 10));
+            const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom / 10));
+            const translate = viewer.use_gpu
+                ? `translate3d(${x}%, ${y}%, 0)`
+                : `translate(${x}%, ${y}%)`;
+            render_el.style.transform = `${translate} ${scale} rotate(${viewer.rotate}deg)`;
             styles += ` #${cleanCssSelector(
                 viewer.id
             )} .svg-viewer__svg-overlay-item > * { transform: rotate(-${viewer.rotate}deg) scale(${

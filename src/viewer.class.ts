@@ -66,6 +66,8 @@ export class Viewer {
 
     public readonly mappings: HashMap<Rect>;
 
+    public readonly use_gpu: boolean;
+
     public contains(el_id: string) {
         this.svg_data.includes(`id="${el_id}"`);
     }
@@ -126,5 +128,6 @@ export class Viewer {
             this.desired_zoom !== this.zoom ||
             this.desired_center.x !== this.center.x ||
             this.desired_center.y !== this.center.y;
+        this.use_gpu = _data?.use_gpu ?? true;
     }
 }
