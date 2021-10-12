@@ -69,10 +69,10 @@ export function eventToPoint(event: MouseEvent | TouchEvent): Point {
 export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rect> {
     if (!element) return {};
     let mapping: HashMap<Rect> = {};
-    const p_box = element.getBoundingClientRect();
+    const p_box = element?.getBoundingClientRect() || {};
     const children = element.querySelectorAll('[id]');
     children.forEach((el) => {
-        const box = el.getBoundingClientRect();
+        const box = el?.getBoundingClientRect() || {};
         mapping[el.id] = {
             x: Math.floor(((box.left + box.width / 2 - p_box.left) / p_box.width) * 1000) / 1000,
             y: Math.floor(((box.top + box.height / 2 - p_box.top) / p_box.height) * 1000) / 1000,
@@ -88,8 +88,8 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
     const svg_el = viewer.element?.querySelector(`svg`);
     const element = svg_el?.querySelector(`#${cleanCssSelector(id)}`);
     if (element && svg_el && overlay_el) {
-        const box = svg_box || overlay_el.getBoundingClientRect();
-        const el_box = element.getBoundingClientRect();
+        const box = svg_box || overlay_el?.getBoundingClientRect() || {};
+        const el_box = element?.getBoundingClientRect() || {};
         const coords = {
             x: (el_box.left + el_box.width / 2 - box.left) / box.width,
             y: (el_box.top + el_box.height / 2 - box.top) / box.height,
@@ -105,7 +105,7 @@ export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: Clie
     const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
     if (svg_el && overlay_el) {
-        const box = svg_box || overlay_el.getBoundingClientRect();
+        const box = svg_box || overlay_el?.getBoundingClientRect() || {};
         const coords = {
             x: (point.x - box.left) / box.width,
             y: (point.y - box.top) / box.height,

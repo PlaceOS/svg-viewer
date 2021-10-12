@@ -74,7 +74,7 @@ export async function createView(viewer: Viewer) {
     overlays_el.appendChild(canvas_el);
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
-    const container_box = container_el.getBoundingClientRect();
+    const container_box = container_el?.getBoundingClientRect() || {};
     viewer = update(viewer, { box: container_box });
     await setupElementMapping(viewer);
     listenForViewActions(viewer);
@@ -193,7 +193,7 @@ export async function resizeView(viewer: Viewer) {
                 const svg_el: HTMLDivElement | null =
                     element.querySelector('.svg-viewer__svg-output');
                 const canvas_el = element.querySelector('canvas');
-                const container_box = container_el.getBoundingClientRect();
+                const container_box = container_el?.getBoundingClientRect() || {};
                 if (!overlays_el || !svg_el || !canvas_el)
                     throw new Error('Viewer elements not ready yet.');
                 requestAnimationFrame(async () => {
@@ -213,7 +213,7 @@ export async function resizeView(viewer: Viewer) {
                     let clipped_ratio = 1;
                     console.log('Ratio:', clipped_ratio, box);
                     let size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);
-                    while (size >= 1920 * 1080 * 8) {
+                    while (size >= 1920 * 1080 * 8 || size >= window.innerWidth * window.innerHeight * 10) {
                         // Canvas size limit on certain browsers
                         clipped_ratio = clipped_ratio * 0.95;
                         size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);
