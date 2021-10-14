@@ -405,7 +405,7 @@ export function styleMapToString(
         }
         output +=
             (with_id ? `#${cleanCssSelector(id)} ` : '') +
-            `svg ${cleanCssSelector(selector)} { ${properties} } `;
+            `svg ${selector.split(' ').map(_ => cleanCssSelector(_)).join(' ')} { ${properties} } `;
     }
     return output;
 }
