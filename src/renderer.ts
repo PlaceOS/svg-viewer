@@ -164,7 +164,10 @@ export function renderToCanvas(viewer: Viewer) {
             const b64Start = 'data:image/svg+xml;base64,';
             const image64 = b64Start + svg64;
             img.onload = () => {
-                canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const context = canvas.getContext('2d')!;
+                context.setTransform(1,0,0,1,0,0);
+                context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                context.save();
                 setTimeout(() => resolve(), 500);
             };
             img.src = image64;
