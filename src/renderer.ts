@@ -216,7 +216,7 @@ export async function resizeView(viewer: Viewer) {
                     let clipped_ratio = 1;
                     console.log('Ratio:', clipped_ratio, box);
                     let size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);
-                    while (size >= 1920 * 1080 * 8 || size >= window.innerWidth * window.innerHeight * 10) {
+                    while (size >= 1920 * 1080 * 8 || size >= viewer.max_resolution) {
                         // Canvas size limit on certain browsers
                         clipped_ratio = clipped_ratio * 0.95;
                         size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);

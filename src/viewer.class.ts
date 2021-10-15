@@ -61,6 +61,8 @@ export class Viewer {
     public readonly needs_update: boolean;
     /**  */
     public readonly options: ViewerOptions;
+    /** Max resolution for the render canvas image */
+    public readonly max_resolution: number;
 
     public readonly updated_count: number;
 
@@ -85,6 +87,7 @@ export class Viewer {
         this.center = { x: _data.center?.x || 0.5, y: _data.center?.y || 0.5 };
         this.rotate = _data.rotate || 0;
         this.ratio = _data.ratio || 1;
+        this.max_resolution = _data.max_resolution || window.innerWidth * window.innerHeight * 10;
         this.focus = _data.focus || null;
         this.options = _data.options || {};
         this.mappings = _data.mappings || {};
