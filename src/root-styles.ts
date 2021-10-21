@@ -26,22 +26,23 @@ export const STYLES = `
 
     .svg-viewer__render-container {
         position: absolute;
-        top: -450%;
-        left: -450%;
-        right: -450%;
-        bottom: -450%;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
     }
 
     .svg-viewer__svg-output {
         position: absolute;
-        top: 10em;
-        left: 10em;
-        right: 10em;
-        bottom: 10em;
+        top: 2em;
+        left: 2em;
+        right: 2em;
+        bottom: 2em;
         display: flex;
         align-items: center;
         justify-content: center;
         transform: translateZ(0);
+        pointer-events: none;
     }
 
     .svg-viewer__svg-output svg {

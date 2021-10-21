@@ -49,7 +49,7 @@ export async function createView(viewer: Viewer) {
     const render_el = document.createElement('div');
     const svg_el = document.createElement('div');
     const overlays_el = document.createElement('div');
-    const canvas_el = document.createElement('canvas');
+    const iframe_el = document.createElement('iframe');
     /** Add rendered elements to container */
     render_el.appendChild(svg_el);
     render_el.appendChild(overlays_el);
@@ -60,8 +60,8 @@ export async function createView(viewer: Viewer) {
     container_el.classList.add('svg-viewer');
     container_el.id = viewer.id;
     styles_el.id = viewer.id;
-    canvas_el.id = 'svg-display';
-    canvas_el.classList.add('svg-viewer__canvas');
+    iframe_el.id = 'svg-display';
+    iframe_el.classList.add('svg-viewer__iframe');
     render_el.classList.add('svg-viewer__render-container');
     overlays_el.classList.add('svg-viewer__svg-overlays');
     /** Add SVG to the view */
@@ -71,7 +71,7 @@ export async function createView(viewer: Viewer) {
     const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
     overlays_el.style.width = `${view_box.width}px`;
     overlays_el.style.height = `${view_box.height}px`;
-    overlays_el.appendChild(canvas_el);
+    overlays_el.appendChild(iframe_el);
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
     const container_box = container_el?.getBoundingClientRect() || {};
@@ -96,6 +96,7 @@ export function setupElementMapping(viewer: Viewer) {
             _element_mappings[viewer.url] = element_map;
             update(viewer, { mappings: element_map });
             svg.style.display = 'none';
+            renderToIFrame(viewer);
             renderOverlays(viewer);
             resolve();
         });
@@ -115,21 +116,24 @@ export function renderView(viewer: Viewer) {
             const render_el: HTMLDivElement | null = element.querySelector(
                 '.svg-viewer__render-container'
             );
-            const scale = `scale(${viewer.zoom / 10})`;
+            const scale = `scale(${viewer.zoom * viewer.svg_ratio * 0.9})`;
             if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
-            const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom / 10));
-            const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom / 10));
+            const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom * viewer.svg_ratio));
+            const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom * viewer.svg_ratio));
             const translate = viewer.use_gpu
                 ? `translate3d(${x}%, ${y}%, 0)`
                 : `translate(${x}%, ${y}%)`;
             render_el.style.transform = `${translate} ${scale} rotate(${viewer.rotate}deg)`;
-            styles += ` #${cleanCssSelector(
+            styles += `#${
                 viewer.id
-            )} .svg-viewer__svg-overlay-item > * { transform: rotate(-${viewer.rotate}deg) scale(${
-                10 / viewer.zoom
-            }); height: ${(viewer.zoom / 10) * 100}%; width: ${(viewer.zoom / 10) * 100}%; }`;
+            } .svg-viewer__svg-overlay-item > *:not([no-scale="true"]) { transform: rotate(-${
+                viewer.rotate
+            }deg) scale(${(1 / viewer.zoom) * (1 / viewer.svg_ratio)}); }`;
+            styles += `#${viewer.id} .svg-viewer__svg-overlay-item > * { transform: rotate(-${
+                viewer.rotate
+            }deg); height: 100%; width: 100%; }`;
             styles_el.innerHTML = styles;
-            renderToCanvas(viewer);
+            applyStylesToIframe(viewer);
             focusOnFeature(viewer);
             renderOverlays(viewer);
             _animation_frames[viewer.id] = 0;
@@ -138,44 +142,67 @@ export function renderView(viewer: Viewer) {
     });
 }
 
-export function renderToCanvas(viewer: Viewer) {
-    return new Promise<void>((resolve) => {
-        const style_string = JSON.stringify({ ...viewer.styles }) || '';
-        if (style_string.localeCompare(_styles[viewer.id])) {
-            const element: HTMLElement | null = viewer.element;
-            if (!element) throw new Error('No element set on viewer');
-            const canvas: HTMLCanvasElement | null = element.querySelector('.svg-viewer__canvas');
-            const svg_el: HTMLDivElement = element.querySelector('.svg-viewer__svg-output') as any;
-            if (!canvas) throw new Error('No canvas created for viewer');
-            const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
-            const img: HTMLImageElement = document.createElement('img')!;
-            const styles = styleMapToString(viewer.id, viewer.styles, false);
-            let svg_string = `${viewer.svg_data}`.replace(
-                /[^\?\-]>/,
-                `$&<defs><style>${styles}</style></defs>`
-            );
-            svg_string = /<svg[^>]*width="[^>]*>/.test(svg_string)
-                ? svg_string
-                : svg_string.replace(
-                      `<svg`,
-                      `<svg width="${view_box.width}" height="${view_box.height}" `
-                  );
-            const svg64 = btoa(svg_string);
-            const b64Start = 'data:image/svg+xml;base64,';
-            const image64 = b64Start + svg64;
-            img.onload = () => {
-                const context = canvas.getContext('2d')!;
-                context.setTransform(1,0,0,1,0,0);
-                context.drawImage(img, 0, 0, canvas.width, canvas.height);
-                context.save();
-                setTimeout(() => resolve(), 500);
-            };
-            img.src = image64;
-            _styles[viewer.id] = style_string;
-        } else {
-            resolve();
+export async function renderToIFrame(viewer: Viewer) {
+    const style_string = JSON.stringify({ ...viewer.styles }) || '';
+    if (style_string.localeCompare(_styles[viewer.id])) {
+        const element: HTMLElement | null = viewer.element;
+        if (!element) throw new Error('No element set on viewer');
+        const iframe: HTMLIFrameElement | null = element.querySelector('.svg-viewer__iframe');
+        const svg_el: HTMLDivElement = element.querySelector('.svg-viewer__svg-output') as any;
+        if (!iframe) throw new Error('No iframe created for viewer');
+        const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
+        let svg_string = `${viewer.svg_data}`;
+        svg_string = /<svg[^>]*width="[^>]*>/.test(svg_string)
+            ? svg_string
+            : svg_string.replace(
+                  `<svg`,
+                  `<svg width="${view_box.width}" height="${view_box.height}" `
+              );
+        const domain_js = `
+<script>
+    function updateStyles(evt) {
+        try {
+            var message = JSON.parse(evt.data);
+            if (message.id === 'svg-styles') {
+                const style_el = document.getElementById('style');
+                style_el.innerHTML = message.content;
+            }
+        } catch(e) {}
+    }
+
+    if (window.addEventListener) {
+        window.addEventListener("message", updateStyles, false);
+    } else {
+        window.attachEvent("onmessage", updateStyles);
+    }
+</script>`;
+        const svg64 = btoa(
+            `<html><head><style>*{overflow:hidden;}</style><style id="style"></style></head><body>${svg_string}${domain_js}</body></html>`
+        );
+        const b64Start = 'data:text/html;base64,';
+        const image64 = b64Start + svg64;
+        iframe.src = image64;
+        _styles[viewer.id] = style_string;
+    }
+}
+
+export async function applyStylesToIframe(viewer: Viewer) {
+    const style_string = JSON.stringify({ ...viewer.styles }) || '';
+    if (style_string.localeCompare(_styles[viewer.id])) {
+        const element: HTMLElement | null = viewer.element;
+        if (!element) throw new Error('No element set on viewer');
+        const iframe: HTMLIFrameElement | null = element.querySelector('.svg-viewer__iframe');
+        if (!iframe) throw new Error('No iframe created for viewer');
+        if (!iframe.contentWindow) {
+            iframe.onload = () => applyStylesToIframe(viewer);
+            return;
         }
-    });
+        const styles = styleMapToString(viewer.styles);
+        iframe.contentWindow.postMessage(
+            JSON.stringify({ id: 'svg-styles', content: styles }),
+            '*'
+        );
+    }
 }
 
 export async function resizeView(viewer: Viewer) {
@@ -195,9 +222,9 @@ export async function resizeView(viewer: Viewer) {
                 const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
                 const svg_el: HTMLDivElement | null =
                     element.querySelector('.svg-viewer__svg-output');
-                const canvas_el = element.querySelector('canvas');
+                const iframe_el = element.querySelector('iframe');
                 const container_box = container_el?.getBoundingClientRect() || {};
-                if (!overlays_el || !svg_el || !canvas_el)
+                if (!overlays_el || !svg_el || !iframe_el)
                     throw new Error('Viewer elements not ready yet.');
                 requestAnimationFrame(async () => {
                     const ratio = container_box.height / container_box.width;
@@ -209,25 +236,22 @@ export async function resizeView(viewer: Viewer) {
                     }
                     const width = (container_box.width - 32) * Math.min(1, ratio / ratio_svg);
                     const box = { width, height: width * ratio_svg };
-                    overlays_el.style.width = box.width * (10 / viewer.zoom) + 'px';
-                    overlays_el.style.height = box.height * (10 / viewer.zoom) + 'px';
-                    canvas_el.style.width = box.width * (10 / viewer.zoom) + 'px';
-                    canvas_el.style.height = box.height * (10 / viewer.zoom) + 'px';
-                    let clipped_ratio = 1;
-                    console.log('Ratio:', clipped_ratio, box);
-                    let size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);
-                    while (size >= 1920 * 1080 * 8 || size >= viewer.max_resolution) {
-                        // Canvas size limit on certain browsers
-                        clipped_ratio = clipped_ratio * 0.95;
-                        size = box.width * 10 * clipped_ratio * (box.height * 10 * clipped_ratio);
-                    }
-                    canvas_el.width = box.width * 10 * clipped_ratio;
-                    canvas_el.height = box.height * 10 * clipped_ratio;
-                    console.log('Canvas Size:', canvas_el.width, canvas_el.height);
-                    // Clear styles to redraw SVG to canvas
+                    overlays_el.style.width = view_box.width + 'px';
+                    overlays_el.style.height = view_box.height + 'px';
+                    iframe_el.style.width = view_box.width + 'px';
+                    iframe_el.style.height = view_box.height + 'px';
+                    iframe_el.width = `${view_box.width}`;
+                    iframe_el.height = `${view_box.height}`;
+                    const container_svg_ratio = Math.min(
+                        container_box.height / view_box.height,
+                        container_box.width / view_box.width
+                    );
+                    const svg_ratio = container_svg_ratio;
+                    // Clear styles to redraw SVG to iframe
                     _styles[viewer.id] = '';
                     viewer = update(viewer, {
                         ratio: box.height / box.width,
+                        svg_ratio,
                         box: container_box,
                     });
                     await renderView(viewer);
@@ -389,11 +413,7 @@ export function renderActionZones(viewer: Viewer) {
  * @param id ID of the viewer
  * @param styles Style mappings
  */
-export function styleMapToString(
-    id: string,
-    styles: ViewerStyles,
-    with_id: boolean = true
-): string {
+export function styleMapToString(styles: ViewerStyles): string {
     let output = '';
     for (const selector in styles) {
         if (!styles[selector]) {
@@ -406,9 +426,10 @@ export function styleMapToString(
             }
             properties += `${prop}: ${styles[selector][prop]}; `;
         }
-        output +=
-            (with_id ? `#${cleanCssSelector(id)} ` : '') +
-            `svg ${selector.split(' ').map(_ => cleanCssSelector(_)).join(' ')} { ${properties} } `;
+        output += `svg ${selector
+            .split(' ')
+            .map((_) => cleanCssSelector(_))
+            .join(' ')} { ${properties} } `;
     }
     return output;
 }

@@ -51,6 +51,8 @@ export class Viewer {
     public readonly rotate: number;
     /** Ratio that the height to width of the SVG is */
     public readonly ratio: number;
+    /** Ratio that the height to width of the SVG is */
+    public readonly svg_ratio: number;
     /** Box dimensions for the root element of the viewer */
     public readonly box: Box;
     /** Zoom level of the SVG. Number from 1 - 10 */
@@ -61,7 +63,7 @@ export class Viewer {
     public readonly needs_update: boolean;
     /**  */
     public readonly options: ViewerOptions;
-    /** Max resolution for the render canvas image */
+    /** Max resolution for the render iframe image */
     public readonly max_resolution: number;
 
     public readonly updated_count: number;
@@ -84,9 +86,10 @@ export class Viewer {
         this.styles = _data.styles || {};
         this.svg_data = _data.svg_data || '';
         this.zoom = _data.zoom || 1;
-        this.center = { x: _data.center?.x || 0.5, y: _data.center?.y || 0.5 };
+        this.center = { x: _data.center?.x ?? 0.5, y: _data.center?.y ?? 0.5 };
         this.rotate = _data.rotate || 0;
         this.ratio = _data.ratio || 1;
+        this.svg_ratio = _data.svg_ratio || 1;
         this.max_resolution = _data.max_resolution || window.innerWidth * window.innerHeight * 10;
         this.focus = _data.focus || null;
         this.options = _data.options || {};
