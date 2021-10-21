@@ -34,10 +34,10 @@ export const STYLES = `
 
     .svg-viewer__svg-output {
         position: absolute;
-        top: 2em;
-        left: 2em;
-        right: 2em;
-        bottom: 2em;
+        top: -100%;
+        left: -100%;
+        right: -100%;
+        bottom: -100%;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -48,9 +48,9 @@ export const STYLES = `
     .svg-viewer__svg-output svg {
         opacity: 0;
         height: auto;
-        max-width: 100%;
-        max-height: 100%;
-        width: 1000px;
+        max-width: 200%;
+        max-height: 200%;
+        width: 2000px;
     }
 
     .svg-viewer__svg-overlays {

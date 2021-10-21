@@ -118,8 +118,8 @@ export function renderView(viewer: Viewer) {
             );
             const scale = `scale(${viewer.zoom * viewer.svg_ratio * 0.9})`;
             if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
-            const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom * viewer.svg_ratio));
-            const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom * viewer.svg_ratio));
+            const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom));
+            const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom));
             const translate = viewer.use_gpu
                 ? `translate3d(${x}%, ${y}%, 0)`
                 : `translate(${x}%, ${y}%)`;
@@ -231,8 +231,7 @@ export async function resizeView(viewer: Viewer) {
                     const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
                     const ratio_svg = view_box.height / view_box.width;
                     if (svg_el.firstElementChild) {
-                        (svg_el.firstElementChild as any).style.width =
-                            Math.min(100, 100 * (ratio / ratio_svg)) + '%';
+                        (svg_el.firstElementChild as any).style.width = '200%';
                     }
                     const width = (container_box.width - 32) * Math.min(1, ratio / ratio_svg);
                     const box = { width, height: width * ratio_svg };

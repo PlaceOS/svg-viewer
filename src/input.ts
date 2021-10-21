@@ -252,7 +252,7 @@ export function handlePinchAndPanEnd() {
 export function handleScrolling(id: string, event: WheelEvent) {
     const view = getViewer(id);
     if (view) {
-        const delta = event.deltaY >= 0 ? -0.02 : 0.02;
+        const delta = (event.deltaY >= 0 ? -0.02 : 0.02);
         const zoom = Math.min(10, Math.max(0.5, view.zoom * (1 + delta)));
         const box = view.element
             ?.querySelector('.svg-viewer__render-container')
@@ -262,7 +262,7 @@ export function handleScrolling(id: string, event: WheelEvent) {
         const center =
             zoom === 1 || zoom === 10 || zoom === view.zoom
                 ? view.center
-                : calculateCenterFromZoomOffset(1 + delta, point, view.center);
+                : calculateCenterFromZoomOffset(1 + delta / (zoom * 2), point, view.center);
         update(view, {
             zoom,
             center,

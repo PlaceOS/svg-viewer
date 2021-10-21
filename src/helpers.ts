@@ -74,8 +74,8 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
     children.forEach((el) => {
         const box = el?.getBoundingClientRect() || {};
         mapping[el.id] = {
-            x: Math.floor(((box.left + box.width / 2 - p_box.left) / p_box.width) * 10000) / 10000,
-            y: Math.floor(((box.top + box.height / 2 - p_box.top) / p_box.height) * 10000) / 10000,
+            x: Math.floor(((box.left + box.width / 2 - p_box.left) / p_box.width) * 10000) / 10000 + .005,
+            y: Math.floor(((box.top + box.height / 2 - p_box.top) / p_box.height) * 10000) / 10000 + .01,
             w: Math.floor((box.width / p_box.width) * 10000) / 10000,
             h: Math.floor((box.height / p_box.height) * 10000) / 10000,
         };
@@ -101,14 +101,14 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
     return { x: -1, y: -1 };
 }
 
-export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: ClientRect) {
+export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: ClientRect, zoom: number = 1) {
     const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
     if (svg_el && overlay_el) {
         const box = svg_box || overlay_el?.getBoundingClientRect() || {};
         const coords = {
-            x: (point.x - box.left) / box.width,
-            y: (point.y - box.top) / box.height,
+            x: Math.max(0, Math.min(1, (point.x - box.left) / box.width * zoom)),
+            y: Math.max(0, Math.min(1, (point.y - box.top) / box.height * zoom)),
         };
         return coords;
     } else {
@@ -140,8 +140,8 @@ export function distanceBetween(first: Point, second: Point) {
 
 export function calculateCenterFromZoomOffset(zoom_change: number, point: Point, center: Point) {
     return {
-        x: Math.round((point.x + (center.x - point.x) / zoom_change) * 10000) / 10000,
-        y: Math.round((point.y + (center.y - point.y) / zoom_change) * 10000) / 10000,
+        x: Math.max(0, Math.min(1, Math.round((point.x + (center.x - point.x) / zoom_change) * 10000) / 10000)),
+        y: Math.max(0, Math.min(1, Math.round((point.y + (center.y - point.y) / zoom_change) * 10000) / 10000)),
     };
 }
 
