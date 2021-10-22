@@ -71,14 +71,16 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
     let mapping: HashMap<Rect> = {};
     const p_box = element?.getBoundingClientRect() || {};
     const children = element.querySelectorAll('[id]');
+    console.log('Box:', p_box.left, p_box.top, p_box.width, p_box.height);
     children.forEach((el) => {
         const box = el?.getBoundingClientRect() || {};
         mapping[el.id] = {
-            x: Math.floor(((box.left + box.width / 2 - p_box.left) / p_box.width) * 10000) / 10000 + .005,
-            y: Math.floor(((box.top + box.height / 2 - p_box.top) / p_box.height) * 10000) / 10000 + .01,
+            x: Math.floor(((box.left + box.width / 2 - p_box.left) / (p_box.width * .995)) * 10000) / 10000,
+            y: Math.floor(((box.top + box.height / 2 - p_box.top) / (p_box.height * .9925)) * 10000) / 10000,
             w: Math.floor((box.width / p_box.width) * 10000) / 10000,
             h: Math.floor((box.height / p_box.height) * 10000) / 10000,
         };
+        console.log('Element:', el.id, box.left.toFixed(5), box.top.toFixed(5), ((box.left + box.width / 2 - p_box.left) / p_box.width), ((box.top + box.height / 2 - p_box.top) / p_box.height));
     });
     return mapping;
 }

@@ -194,7 +194,7 @@ export async function applyStylesToIframe(viewer: Viewer) {
         const iframe: HTMLIFrameElement | null = element.querySelector('.svg-viewer__iframe');
         if (!iframe) throw new Error('No iframe created for viewer');
         if (!iframe.contentWindow) {
-            iframe.onload = () => applyStylesToIframe(viewer);
+            iframe.onload = () => setTimeout(() => applyStylesToIframe(viewer), 50);
             return;
         }
         const styles = styleMapToString(viewer.styles);

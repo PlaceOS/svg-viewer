@@ -183,7 +183,7 @@ export function handlePanning(id: string, event: MouseEvent, start: Point = _sta
                 0,
                 Math.min(
                     1,
-                    (point.x - start.x) / view.box.width / view.desired_zoom / view.svg_ratio +
+                    (point.x - start.x) / view.box.width / view.desired_zoom +
                         view.center.x
                 )
             ),
@@ -191,7 +191,7 @@ export function handlePanning(id: string, event: MouseEvent, start: Point = _sta
                 0,
                 Math.min(
                     1,
-                    (point.y - start.y) / view.box.height / view.desired_zoom / view.svg_ratio +
+                    (point.y - start.y) / view.box.height / view.desired_zoom +
                         view.center.y
                 )
             ),
