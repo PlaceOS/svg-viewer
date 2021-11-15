@@ -177,7 +177,7 @@ export async function renderToIFrame(viewer: Viewer) {
     }
 </script>`;
         const svg64 = btoa(
-            `<html><head><style>*{overflow:hidden;}</style><style id="style"></style></head><body>${svg_string}${domain_js}</body></html>`
+            `<html><head><style>*{overflow:hidden;}html,body{padding:0;margin:0;}</style><style id="style"></style>${domain_js}</head><body>${svg_string}</body></html>`
         );
         const b64Start = 'data:text/html;base64,';
         const image64 = b64Start + svg64;
@@ -194,10 +194,15 @@ export async function applyStylesToIframe(viewer: Viewer) {
         const iframe: HTMLIFrameElement | null = element.querySelector('.svg-viewer__iframe');
         if (!iframe) throw new Error('No iframe created for viewer');
         if (!iframe.contentWindow) {
-            iframe.onload = () => setTimeout(() => applyStylesToIframe(viewer), 50);
+            iframe.onload = () => {
+                setTimeout(() => applyStylesToIframe(viewer), 50);
+                setTimeout(() => applyStylesToIframe(viewer), 500);
+            }
             return;
         }
-        const styles = styleMapToString(viewer.styles);
+        const style: any = {};
+        style[`[empty${Math.floor(Math.random() * 999_999)}]`] = {};
+        const styles = styleMapToString({ ...viewer.styles, ...style });
         iframe.contentWindow.postMessage(
             JSON.stringify({ id: 'svg-styles', content: styles }),
             '*'

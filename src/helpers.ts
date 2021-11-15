@@ -80,7 +80,6 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
             w: Math.floor((box.width / p_box.width) * 10000) / 10000,
             h: Math.floor((box.height / p_box.height) * 10000) / 10000,
         };
-        console.log('Element:', el.id, box.left.toFixed(5), box.top.toFixed(5), ((box.left + box.width / 2 - p_box.left) / p_box.width), ((box.top + box.height / 2 - p_box.top) / p_box.height));
     });
     return mapping;
 }
