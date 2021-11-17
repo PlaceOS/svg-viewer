@@ -352,6 +352,7 @@ export function renderFeatures(viewer: Viewer) {
             } else if (feature.location?.y || feature.location?.x) {
                 coordinates = feature.location;
             }
+            if (!coordinates.x && !coordinates.y) continue;
             feature_container_el.classList.add('svg-viewer__svg-overlay-item');
             feature_container_el.setAttribute('feature', 'true');
             feature_container_el.classList.add('feature');
