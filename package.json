@@ -1,5 +1,5 @@
 {
-    "version": "0.3.10-dev",
+    "version": "0.3.11-dev",
     "license": "MIT",
     "name": "@placeos/svg-viewer",
     "author": "Alex Sorafumo <alex@yuion.net>",
@@ -84,6 +84,7 @@
         "typescript": "^3.9.7"
     },
     "dependencies": {
+        "@placeos/svg-viewer": "file:placeos-svg-viewer-0.3.10-dev.tgz",
         "regenerator-runtime": "^0.13.7"
     }
 }

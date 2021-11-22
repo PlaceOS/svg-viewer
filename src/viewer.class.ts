@@ -65,12 +65,14 @@ export class Viewer {
     public readonly options: ViewerOptions;
     /** Max resolution for the render iframe image */
     public readonly max_resolution: number;
-
+    /**  */
     public readonly updated_count: number;
-
+    /** Mapping of element positions to their IDs */
     public readonly mappings: HashMap<Rect>;
-
+    /** Whether to use GPU for rendering map view changes */
     public readonly use_gpu: boolean;
+    /** Ratio of the map rendered to the container element */
+    public readonly content_ratio: Point;
 
     public contains(el_id: string) {
         this.svg_data.includes(`id="${el_id}"`);
@@ -85,6 +87,7 @@ export class Viewer {
         this.actions = _data.actions || [];
         this.styles = _data.styles || {};
         this.svg_data = _data.svg_data || '';
+        this.content_ratio = _data.content_ratio || { x: 1, y: 1 };
         this.zoom = _data.zoom || 1;
         this.center = { x: _data.center?.x ?? 0.5, y: _data.center?.y ?? 0.5 };
         this.rotate = _data.rotate || 0;

@@ -71,12 +71,17 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
     let mapping: HashMap<Rect> = {};
     const p_box = element?.getBoundingClientRect() || {};
     const children = element.querySelectorAll('[id]');
-    console.log('Box:', p_box.left, p_box.top, p_box.width, p_box.height);
     children.forEach((el) => {
         const box = el?.getBoundingClientRect() || {};
         mapping[el.id] = {
-            x: Math.floor(((box.left + box.width / 2 - p_box.left) / (p_box.width * .995)) * 10000) / 10000,
-            y: Math.floor(((box.top + box.height / 2 - p_box.top) / (p_box.height * .9925)) * 10000) / 10000,
+            x:
+                Math.floor(
+                    ((box.left + box.width / 2 - p_box.left) / (p_box.width * 0.995)) * 10000
+                ) / 10000,
+            y:
+                Math.floor(
+                    ((box.top + box.height / 2 - p_box.top) / (p_box.height * 0.9925)) * 10000
+                ) / 10000,
             w: Math.floor((box.width / p_box.width) * 10000) / 10000,
             h: Math.floor((box.height / p_box.height) * 10000) / 10000,
         };
@@ -102,14 +107,19 @@ export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: Clie
     return { x: -1, y: -1 };
 }
 
-export function coordinatesForPoint(viewer: Viewer, point: Point, svg_box?: ClientRect, zoom: number = 1) {
+export function coordinatesForPoint(
+    viewer: Viewer,
+    point: Point,
+    svg_box?: ClientRect,
+    zoom: number = 1
+) {
     const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
     if (svg_el && overlay_el) {
         const box = svg_box || overlay_el?.getBoundingClientRect() || {};
         const coords = {
-            x: Math.max(0, Math.min(1, (point.x - box.left) / box.width * zoom)),
-            y: Math.max(0, Math.min(1, (point.y - box.top) / box.height * zoom)),
+            x: Math.max(0, Math.min(1, ((point.x - box.left) / box.width) * zoom)),
+            y: Math.max(0, Math.min(1, ((point.y - box.top) / box.height) * zoom)),
         };
         return coords;
     } else {
@@ -139,18 +149,34 @@ export function distanceBetween(first: Point, second: Point) {
     return Math.sqrt(Math.pow(first.x - second.x, 2) + Math.pow(first.y - second.y, 2));
 }
 
-export function calculateCenterFromZoomOffset(zoom_change: number, point: Point, center: Point) {
+/** Get point in the middle of a list of points */
+export function middleOf(points: Point[]) {
+    let x_max = 0,
+        x_min = 1;
+    let y_max = 0,
+        y_min = 1;
+    for (const { x, y } of points) {
+        if (x > x_max) x_max = x;
+        else if (x < x_min) x_min = x;
+        if (y > y_max) y_max = y;
+        else if (y < y_min) y_min = y;
+    }
     return {
-        x: Math.max(0, Math.min(1, Math.round((point.x + (center.x - point.x) / zoom_change) * 10000) / 10000)),
-        y: Math.max(0, Math.min(1, Math.round((point.y + (center.y - point.y) / zoom_change) * 10000) / 10000)),
+        x: (x_max - x_min) / 2 + x_min,
+        y: (y_max - y_min) / 2 + y_min,
+    };
+}
+
+export function calculateCenterFromZoomOffset(delta: number, towards: Point, from: Point, scaling = { x: 1, y: 1 }) {
+    return {
+        x: +(from.x + (towards.x - from.x) * delta * scaling.x).toFixed(5),
+        y: +(from.y + (towards.y - from.y) * delta * scaling.y).toFixed(5),
     };
 }
 
 export function basicHash(str: string) {
     var hash = 0;
-    if (str.length == 0) {
-        return hash;
-    }
+    if (str.length == 0) return hash;
     for (var i = 0; i < str.length; i++) {
         var char = str.charCodeAt(i);
         hash = (hash << 5) - hash + char;

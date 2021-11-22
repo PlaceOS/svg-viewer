@@ -12,6 +12,7 @@ import {
     distanceBetween,
     eventToPoint,
     log,
+    middleOf,
 } from './helpers';
 import { getViewer, postEvent, update } from './store';
 
@@ -43,6 +44,8 @@ let _pinching: boolean = false;
 let _panning: boolean = false;
 /** Starting point of the current panning action */
 let _start_point: Point;
+/** Starting point of the current action */
+let _action_start: Point;
 /** Starting distance of the current pinch action */
 let _distance: number;
 
@@ -183,16 +186,14 @@ export function handlePanning(id: string, event: MouseEvent, start: Point = _sta
                 0,
                 Math.min(
                     1,
-                    (point.x - start.x) / view.box.width / view.desired_zoom +
-                        view.center.x
+                    (point.x - start.x) / view.box.width / view.desired_zoom + view.center.x
                 )
             ),
             y: Math.max(
                 0,
                 Math.min(
                     1,
-                    (point.y - start.y) / view.box.height / view.desired_zoom +
-                        view.center.y
+                    (point.y - start.y) / view.box.height / view.desired_zoom + view.center.y
                 )
             ),
         };
@@ -211,6 +212,8 @@ export function handlePinchStart(id: string, event: TouchEvent) {
             { x: event.touches[0].clientX, y: event.touches[0].clientY },
             { x: event.touches[1].clientX, y: event.touches[1].clientY },
         ];
+        const { x, y } = middleOf(points.map((_) => coordinatesForPoint(view, _)));
+        _action_start = { x: 1 - x, y: 1 - y };
         _distance = distanceBetween(points[0], points[1]);
         if (!(event instanceof MouseEvent)) {
             _touchmove = (e: TouchEvent) =>
@@ -229,10 +232,16 @@ export function handlePinch(id: string, event: TouchEvent, distance: number = _d
         ];
         const dist = distanceBetween(points[0], points[1]);
         const zoom = Math.max(0.5, Math.min(10, (view.zoom * dist) / distance));
+        const center =
+            zoom === 1 || zoom === 10 || zoom === view.zoom
+                ? view.center
+                : calculateCenterFromZoomOffset(+(dist / distance - 1).toFixed(5), _action_start, view.center, view.content_ratio);
         _distance = dist;
         update(view, {
             zoom,
+            center,
             desired_zoom: zoom,
+            desired_center: center,
         });
     }
 }
@@ -246,23 +255,24 @@ export function handlePinchAndPanEnd() {
     if (_mouseend) window.removeEventListener('mouseup', _mouseend);
     if (_touchmove) window.removeEventListener('touchmove', _touchmove);
     if (_touchend) window.removeEventListener('touchend', _touchend);
-    _mousemove = _mouseend = _touchmove = _touchend = null;
+    _mousemove = _mouseend = _touchmove = _touchend = _action_start = null as any;
 }
 
 export function handleScrolling(id: string, event: WheelEvent) {
     const view = getViewer(id);
     if (view) {
-        const delta = (event.deltaY >= 0 ? -0.02 : 0.02);
+        const delta = event.deltaY >= 0 ? -0.02 : 0.02;
         const zoom = Math.min(10, Math.max(0.5, view.zoom * (1 + delta)));
-        const box = view.element
-            ?.querySelector('.svg-viewer__render-container')
-            ?.getBoundingClientRect();
-        const cursor_point = coordinatesForPoint(view, eventToPoint(event), box);
-        const point = { x: 1 - cursor_point.x, y: 1 - cursor_point.y };
+        _action_start = coordinatesForPoint(view, eventToPoint(event));
+        timeout('clear_action_start', () => _action_start = null as any);
+        const point = {
+            x: 1 - _action_start.x,
+            y: 1 - _action_start.y,
+        };
         const center =
             zoom === 1 || zoom === 10 || zoom === view.zoom
                 ? view.center
-                : calculateCenterFromZoomOffset(1 + delta / (zoom * 2), point, view.center);
+                : calculateCenterFromZoomOffset(+(delta).toFixed(5), point, view.center, view.content_ratio);
         update(view, {
             zoom,
             center,

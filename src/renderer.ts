@@ -224,6 +224,9 @@ export async function resizeView(viewer: Viewer) {
                 const overlays_el: HTMLDivElement | null = element.querySelector(
                     '.svg-viewer__svg-overlays'
                 );
+                const render_el: HTMLDivElement | null = element.querySelector(
+                    `#${viewer.id}`
+                );
                 const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
                 const svg_el: HTMLDivElement | null =
                     element.querySelector('.svg-viewer__svg-output');
@@ -246,17 +249,26 @@ export async function resizeView(viewer: Viewer) {
                     iframe_el.style.height = view_box.height + 'px';
                     iframe_el.width = `${view_box.width}`;
                     iframe_el.height = `${view_box.height}`;
-                    const container_svg_ratio = Math.min(
+                    const svg_ratio = Math.min(
                         container_box.height / view_box.height,
                         container_box.width / view_box.width
                     );
-                    const svg_ratio = container_svg_ratio;
+                    const render_box = render_el?.getBoundingClientRect();
+                    const overlay_box = overlays_el?.getBoundingClientRect();
+                    let content_ratio = { x: 1, y: 1 };
+                    if (render_box && overlay_box) {
+                        content_ratio = { 
+                            x: (overlay_box.width * svg_ratio * .975) / render_box.width, 
+                            y: (overlay_box.height * svg_ratio * .975) / render_box.height
+                        };
+                    }
                     // Clear styles to redraw SVG to iframe
                     _styles[viewer.id] = '';
                     viewer = update(viewer, {
                         ratio: box.height / box.width,
                         svg_ratio,
                         box: container_box,
+                        content_ratio
                     });
                     await renderView(viewer);
                     _resize_resolves[viewer.id].forEach((res) => res());
