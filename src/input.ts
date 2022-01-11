@@ -81,8 +81,11 @@ export function focusOnFeature(viewer: Viewer) {
             coordinates = viewer.focus.location;
         }
         _focus_feature_map[viewer.id] = _focus_string;
+        const center = { x: 1 - coordinates.x, y: 1 - coordinates.y };
         update(viewer, {
-            desired_center: { x: 1 - coordinates.x, y: 1 - coordinates.y },
+            center,
+            desired_center: center,
+            zoom,
             desired_zoom: zoom,
         });
     }
