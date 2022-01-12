@@ -24,12 +24,12 @@ export interface ViewerLabel {
     /** CSS classes to apply to the label element */
     readonly css_class?: string[];
     /** Z index to apply the the container element */
-    readonly z_index?: string;
+    readonly z_index?: string | number;
 }
 
 export interface ViewerFeature {
     /** Contents of the feature to render */
-    readonly content: HTMLElement;
+    readonly content?: HTMLElement | any;
     /** Whether contents should only show on hover of location */
     readonly hover?: boolean;
     /** Whether container element should be sized to match parent */
@@ -37,7 +37,7 @@ export interface ViewerFeature {
     /** Element ID or Coordinates to display the content */
     readonly location: string | Point;
     /** Z index to apply the the container element */
-    readonly z_index?: string;
+    readonly z_index?: string | number;
     /** Data associated with the feature */
     readonly data?: Record<string, unknown>;
 }
@@ -53,7 +53,7 @@ export interface ViewAction {
     /** ID of the element to listen for actions */
     readonly id: string;
     /** Action to listen for on the SVG */
-    readonly action: 'click' | 'mousedown' | 'mouseup' | 'enter' | 'leave' | '*';
+    readonly action: 'click' | 'mousedown' | 'mouseup' | 'touchstart' | 'touchend' | 'enter' | 'leave' | '*';
     /** Whether an interaction area is needed for listening to */
     readonly zone?: boolean;
     /** Callback for event action */

@@ -23,13 +23,19 @@ export const STYLES = `
         bottom: 0;
         overflow: hidden;
     }
+    .svg-viewer__view-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
 
     .svg-viewer__render-container {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 5%;
+        left: 5%;
+        right: 5%;
+        bottom: 5%;
     }
 
     .svg-viewer__svg-output {

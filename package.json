@@ -1,12 +1,13 @@
 {
-    "version": "0.3.14-dev",
+    "version": "0.3.15-dev",
     "license": "MIT",
     "name": "@placeos/svg-viewer",
     "author": "Alex Sorafumo <alex@yuion.net>",
     "source": "src/index.ts",
-    "main": "dist/svg-viewer.js",
-    "module": "dist/svg-viewer.module.js",
-    "unpkg": "dist/svg-viewer.umd.js",
+    "main": "./dist/svg-viewer.js",
+    "module": "./dist/svg-viewer.module.js",
+    "unpkg": "./dist/svg-viewer.umd.js",
+    "typings": "dist/index.d.ts",
     "files": [
         "dist",
         "src"
@@ -30,10 +31,6 @@
         "semantic-release": "semantic-release",
         "prepare": "npm run build",
         "demo": "npm run build && cp ./demo/australia.svg ./dist/ && parcel demo/index.html"
-    },
-    "peerDependencies": {
-        "rxjs": "^6.6.2",
-        "ts-md5": "^1.2.7"
     },
     "husky": {
         "hooks": {
@@ -74,7 +71,7 @@
         "jest": "^26.2.2",
         "jest-config": "^26.2.2",
         "microbundle": "^0.12.4",
-        "rxjs": "^6.6.2",
+        "rxjs": "^6.6.7",
         "semantic-release": "^17.1.2",
         "ts-jest": "^26.1.4",
         "ts-md5": "^1.2.7",
@@ -82,6 +79,10 @@
         "tslint": "^6.1.3",
         "typedoc": "^0.17.8",
         "typescript": "^3.9.7"
+    },
+    "peerDependencies": {
+        "rxjs": "^6.6.7",
+        "ts-md5": "^1.2.7"
     },
     "dependencies": {
         "regenerator-runtime": "^0.13.7"

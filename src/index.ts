@@ -17,6 +17,6 @@ export {
 
 export { coordinatesForElement, relativeSizeOfElement } from './helpers';
 
-export { Viewer } from './viewer.class';
+export { Viewer, Box } from './viewer.class';
 
 export { applyGlobalStyles } from './root-styles';

@@ -10,7 +10,7 @@ import { listViewers, on_resize, update } from './store';
 import { HashMap, Rect, ViewerStyles } from './types';
 import { Viewer } from './viewer.class';
 
-const _animation_frames: HashMap<number> = {};
+const _animation_frames: HashMap<Promise<void>> = {};
 
 const _element_mappings: HashMap<HashMap<Rect>> = {};
 /** Map of viewer to last rendered labels */
@@ -46,6 +46,7 @@ export async function createView(viewer: Viewer) {
     if (!element) throw new Error('No element set on viewer');
     const container_el = document.createElement('div');
     const styles_el = document.createElement('style');
+    const view_el = document.createElement('div');
     const render_el = document.createElement('div');
     const svg_el = document.createElement('div');
     const overlays_el = document.createElement('div');
@@ -55,13 +56,15 @@ export async function createView(viewer: Viewer) {
     render_el.appendChild(overlays_el);
     /** Add root elements to container */
     container_el.appendChild(styles_el);
-    container_el.appendChild(render_el);
+    container_el.appendChild(view_el);
+    view_el.appendChild(render_el);
     /** Set classes for elements */
     container_el.classList.add('svg-viewer');
     container_el.id = viewer.id;
     styles_el.id = viewer.id;
     iframe_el.id = 'svg-display';
     iframe_el.classList.add('svg-viewer__iframe');
+    view_el.classList.add('svg-viewer__view-container');
     render_el.classList.add('svg-viewer__render-container');
     overlays_el.classList.add('svg-viewer__svg-overlays');
     /** Add SVG to the view */
@@ -69,6 +72,8 @@ export async function createView(viewer: Viewer) {
     svg_el.id = 'svg-output';
     svg_el.innerHTML = viewer.svg_data;
     const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
+    view_el.style.width = `${view_box.width}px`;
+    view_el.style.height = `${view_box.height}px`;
     overlays_el.style.width = `${view_box.width}px`;
     overlays_el.style.height = `${view_box.height}px`;
     overlays_el.appendChild(iframe_el);
@@ -104,42 +109,44 @@ export function setupElementMapping(viewer: Viewer) {
 }
 
 export function renderView(viewer: Viewer) {
-    return new Promise<void>((resolve) => {
-        if (_animation_frames[viewer.id]) {
-            cancelAnimationFrame(_animation_frames[viewer.id]);
-        }
-        _animation_frames[viewer.id] = requestAnimationFrame(async () => {
-            const element: HTMLElement | null = viewer.element;
-            if (!element) throw new Error('No element set on viewer');
-            const styles_el: HTMLStyleElement | null = element.querySelector('style');
-            let styles = ``;
-            const render_el: HTMLDivElement | null = element.querySelector(
-                '.svg-viewer__render-container'
-            );
-            const scale = `scale(${viewer.zoom * viewer.svg_ratio * 0.9})`;
-            if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
-            const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom));
-            const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom));
-            const translate = viewer.use_gpu
-                ? `translate3d(${x}%, ${y}%, 0)`
-                : `translate(${x}%, ${y}%)`;
-            render_el.style.transform = `${translate} ${scale} rotate(${viewer.rotate}deg)`;
-            styles += `#${
-                viewer.id
-            } .svg-viewer__svg-overlay-item > *:not([no-scale="true"]) { transform: rotate(-${
-                viewer.rotate
-            }deg) scale(${(1 / viewer.zoom) * (1 / viewer.svg_ratio)}); }`;
-            styles += `#${viewer.id} .svg-viewer__svg-overlay-item > * { transform: rotate(-${
-                viewer.rotate
-            }deg); height: 100%; width: 100%; }`;
-            styles_el.innerHTML = styles;
-            applyStylesToIframe(viewer);
-            focusOnFeature(viewer);
-            renderOverlays(viewer);
-            _animation_frames[viewer.id] = 0;
-            resolve();
+    if (!_animation_frames[viewer.id]) {
+        _animation_frames[viewer.id] = new Promise<void>((resolve) => {
+            const frame = requestAnimationFrame(() => {
+                if (!_animation_frames[viewer.id]) return;
+                const element: HTMLElement | null = viewer.element;
+                if (!element) throw new Error('No element set on viewer');
+                const styles_el: HTMLStyleElement | null = element.querySelector('style');
+                let styles = ``;
+                const render_el: HTMLDivElement | null = element.querySelector(
+                    '.svg-viewer__render-container'
+                );
+                const scale = `scale(${viewer.zoom * viewer.svg_ratio})`;
+                if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
+                const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom));
+                const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom));
+                const translate = viewer.use_gpu
+                    ? `translate3d(${x}%, ${y}%, 0)`
+                    : `translate(${x}%, ${y}%)`;
+                render_el.style.transform = `${translate} ${scale} rotate(${viewer.rotate}deg)`;
+                styles += `#${
+                    viewer.id
+                } .svg-viewer__svg-overlay-item > *:not([no-scale="true"]) { transform: rotate(-${
+                    viewer.rotate
+                }deg) scale(${(1 / viewer.zoom) * (1 / viewer.svg_ratio)}); }`;
+                styles += `#${viewer.id} .svg-viewer__svg-overlay-item > * { transform: rotate(-${
+                    viewer.rotate
+                }deg); height: 100%; width: 100%; }`;
+                styles_el.innerHTML = styles;
+                applyStylesToIframe(viewer);
+                focusOnFeature(viewer);
+                renderOverlays(viewer);
+                delete _animation_frames[viewer.id];
+                cancelAnimationFrame(frame);
+                resolve();
+            });
         });
-    });
+    }
+    return _animation_frames[viewer.id] as Promise<void>;
 }
 
 export async function renderToIFrame(viewer: Viewer) {
@@ -221,6 +228,9 @@ export async function resizeView(viewer: Viewer) {
             () => {
                 const element: HTMLElement | null = viewer.element;
                 if (!element) throw new Error('No element set on viewer');
+                const view_el: HTMLDivElement | null = element.querySelector(
+                    '.svg-viewer__view-container'
+                );
                 const overlays_el: HTMLDivElement | null = element.querySelector(
                     '.svg-viewer__svg-overlays'
                 );
@@ -232,7 +242,7 @@ export async function resizeView(viewer: Viewer) {
                     element.querySelector('.svg-viewer__svg-output');
                 const iframe_el = element.querySelector('iframe');
                 const container_box = container_el?.getBoundingClientRect() || {};
-                if (!overlays_el || !svg_el || !iframe_el)
+                if (!overlays_el || !svg_el || !iframe_el || !view_el)
                     throw new Error('Viewer elements not ready yet.');
                 requestAnimationFrame(async () => {
                     const ratio = container_box.height / container_box.width;
@@ -245,6 +255,8 @@ export async function resizeView(viewer: Viewer) {
                     const box = { width, height: width * ratio_svg };
                     overlays_el.style.width = view_box.width + 'px';
                     overlays_el.style.height = view_box.height + 'px';
+                    view_el.style.width = view_box.width + 'px';
+                    view_el.style.height = view_box.height + 'px';
                     iframe_el.style.width = view_box.width + 'px';
                     iframe_el.style.height = view_box.height + 'px';
                     iframe_el.width = `${view_box.width}`;
@@ -328,7 +340,7 @@ export function renderLabels(viewer: Viewer) {
                 label_el.classList.add(...label.css_class);
             }
             if (label.z_index) {
-                label_container_el.style.zIndex = label.z_index;
+                label_container_el.style.zIndex = `${label.z_index}`;
             }
             label_el.textContent = label.content;
             div_el.appendChild(label_el);
@@ -369,7 +381,7 @@ export function renderFeatures(viewer: Viewer) {
             feature_container_el.setAttribute('feature', 'true');
             feature_container_el.classList.add('feature');
             if (feature.z_index) {
-                feature_container_el.style.zIndex = feature.z_index;
+                feature_container_el.style.zIndex = `${feature.z_index}`;
             }
             if (feature.hover) {
                 feature_container_el.classList.add('svg-viewer__svg-overlay-item__hover');
