@@ -32,10 +32,11 @@ export const STYLES = `
 
     .svg-viewer__render-container {
         position: absolute;
-        top: 5%;
-        left: 5%;
-        right: 5%;
-        bottom: 5%;
+        top: 0%;
+        left: 0%;
+        right: 0%;
+        bottom: 0%;
+        transform-box: fill-box;
     }
 
     .svg-viewer__svg-output {

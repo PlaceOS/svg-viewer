@@ -76,14 +76,14 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
         mapping[el.id] = {
             x:
                 Math.floor(
-                    ((box.left + box.width / 2 - p_box.left) / (p_box.width * 0.995)) * 10000
-                ) / 10000,
+                    ((box.left + box.width / 2 - p_box.left) / (p_box.width)) * 100000
+                ) / 100000,
             y:
                 Math.floor(
-                    ((box.top + box.height / 2 - p_box.top) / (p_box.height * 0.9925)) * 10000
-                ) / 10000,
-            w: Math.floor((box.width / p_box.width) * 10000) / 10000,
-            h: Math.floor((box.height / p_box.height) * 10000) / 10000,
+                    ((box.top + box.height / 2 - p_box.top) / (p_box.height)) * 100000
+                ) / 100000,
+            w: Math.floor((box.width / p_box.width) * 100000) / 100000,
+            h: Math.floor((box.height / p_box.height) * 100000) / 100000,
         };
     });
     return mapping;

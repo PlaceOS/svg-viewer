@@ -238,7 +238,7 @@ export function handlePinch(id: string, event: TouchEvent, distance: number = _d
         const center =
             zoom === 1 || zoom === 10 || zoom === view.zoom
                 ? view.center
-                : calculateCenterFromZoomOffset(+(dist / distance - 1).toFixed(5), _action_start, view.center, view.content_ratio);
+                : calculateCenterFromZoomOffset(+(dist / distance - 1).toFixed(5), _action_start, view.center);
         _distance = dist;
         update(view, {
             zoom,
@@ -275,7 +275,7 @@ export function handleScrolling(id: string, event: WheelEvent) {
         const center =
             zoom === 1 || zoom === 10 || zoom === view.zoom
                 ? view.center
-                : calculateCenterFromZoomOffset(+(delta).toFixed(5), point, view.center, view.content_ratio);
+                : calculateCenterFromZoomOffset(+(delta).toFixed(5), point, view.center, { x: view.svg_ratio, y: view.svg_ratio });
         update(view, {
             zoom,
             center,

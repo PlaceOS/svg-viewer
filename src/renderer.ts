@@ -79,7 +79,7 @@ export async function createView(viewer: Viewer) {
     overlays_el.appendChild(iframe_el);
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
-    const container_box = container_el?.getBoundingClientRect() || {};
+    const container_box = view_el?.getBoundingClientRect() || {};
     viewer = update(viewer, { box: container_box });
     await setupElementMapping(viewer);
     listenForViewActions(viewer);
@@ -122,8 +122,8 @@ export function renderView(viewer: Viewer) {
                 );
                 const scale = `scale(${viewer.zoom * viewer.svg_ratio})`;
                 if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
-                const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom));
-                const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom));
+                const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom) * viewer.svg_ratio);
+                const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom) * viewer.svg_ratio);
                 const translate = viewer.use_gpu
                     ? `translate3d(${x}%, ${y}%, 0)`
                     : `translate(${x}%, ${y}%)`;
@@ -242,6 +242,7 @@ export async function resizeView(viewer: Viewer) {
                     element.querySelector('.svg-viewer__svg-output');
                 const iframe_el = element.querySelector('iframe');
                 const container_box = container_el?.getBoundingClientRect() || {};
+                const view_el_box = view_el?.getBoundingClientRect() || {};
                 if (!overlays_el || !svg_el || !iframe_el || !view_el)
                     throw new Error('Viewer elements not ready yet.');
                 requestAnimationFrame(async () => {
@@ -279,7 +280,7 @@ export async function resizeView(viewer: Viewer) {
                     viewer = update(viewer, {
                         ratio: box.height / box.width,
                         svg_ratio,
-                        box: container_box,
+                        box: view_el_box as any,
                         content_ratio
                     });
                     await renderView(viewer);
