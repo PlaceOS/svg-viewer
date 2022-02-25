@@ -4,6 +4,7 @@ import {
     generateCoordinateListForTree,
     log,
     simplifyDataObject,
+    stringToBase64,
 } from './helpers';
 import { focusOnFeature, listenForResize, listenForViewActions } from './input';
 import { listViewers, on_resize, update } from './store';
@@ -183,7 +184,7 @@ export async function renderToIFrame(viewer: Viewer) {
         window.attachEvent("onmessage", updateStyles);
     }
 </script>`;
-        const svg64 = btoa(
+        const svg64 = stringToBase64(
             `<html><head><style>*{overflow:hidden;}html,body{padding:0;margin:0;}</style><style id="style"></style>${domain_js}</head><body>${svg_string}</body></html>`
         );
         const b64Start = 'data:text/html;base64,';
@@ -392,11 +393,11 @@ export function renderFeatures(viewer: Viewer) {
             if (size.w || size.h) {
                 feature_container_el.style.width = `${size.w * 100}%`;
                 feature_container_el.style.height = `${size.h * 100}%`;
-                feature_container_el.style.transform = `translate(-50%, -50%)`;
             } else {
                 feature_container_el.style.width = `1%`;
                 feature_container_el.style.height = `${1 / viewer.ratio}%`;
             }
+            feature_container_el.style.transform = `translate(-50%, -50%)`;
             if (feature.content instanceof Node) {
                 feature_container_el.appendChild(feature.content);
             }
