@@ -28,6 +28,7 @@ export interface ViewerLabel {
 }
 
 export interface ViewerFeature {
+    readonly track_id?: string;
     /** Contents of the feature to render */
     readonly content?: HTMLElement | any;
     /** Whether contents should only show on hover of location */

@@ -361,11 +361,18 @@ export function renderFeatures(viewer: Viewer) {
     if (features_string !== _features[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
         if (!overlay_el) return console.log('Unable to get overlay element.');
-        const feature_el_list: Element[] = Array.from(overlay_el.querySelectorAll('[feature]'));
+        const feature_el_list = overlay_el.querySelectorAll('.feature');
+        const existing: Element[] = [];
+        (window as any).overlay_el = overlay_el;
         /** Remove existing features */
-        feature_el_list.filter((el) => el.parentNode).forEach((el) => overlay_el.removeChild(el));
+        feature_el_list.forEach((el) => {
+            if (!el.parentNode) return;
+            const track_id = el.getAttribute('track-id');
+            if (track_id === 'none' || viewer.features.find(_ => _.track_id !== track_id)) overlay_el.removeChild(el)
+            else existing.push(el);
+        });
         for (const feature of viewer.features) {
-            if (!feature.content) continue;
+            if (!feature.content || existing.includes(feature.content)) continue;
             let coordinates = { x: 0, y: 0 };
             let size = { w: 0, h: 0 };
             const feature_container_el = document.createElement('div');
@@ -381,6 +388,7 @@ export function renderFeatures(viewer: Viewer) {
             if (!coordinates.x && !coordinates.y) continue;
             feature_container_el.classList.add('svg-viewer__svg-overlay-item');
             feature_container_el.setAttribute('feature', 'true');
+            feature_container_el.setAttribute('track-id', `${feature.track_id || 'none'}`);
             feature_container_el.classList.add('feature');
             if (feature.z_index) {
                 feature_container_el.style.zIndex = `${feature.z_index}`;
