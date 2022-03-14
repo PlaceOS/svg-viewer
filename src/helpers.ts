@@ -147,6 +147,14 @@ export function distanceBetween(first: Point, second: Point) {
     return Math.sqrt(Math.pow(first.x - second.x, 2) + Math.pow(first.y - second.y, 2));
 }
 
+export function transformPointTowards(center: Point, point: Point, zoom_change: number): Point {
+    const new_point = {
+        x: center.x + (point.x - center.x) * zoom_change,
+        y: center.y + (point.y - center.y) * zoom_change
+    }
+    return new_point;
+}
+
 /** Get point in the middle of a list of points */
 export function middleOf(points: Point[]) {
     let x_max = 0,
@@ -162,18 +170,6 @@ export function middleOf(points: Point[]) {
     return {
         x: (x_max - x_min) / 2 + x_min,
         y: (y_max - y_min) / 2 + y_min,
-    };
-}
-
-export function calculateCenterFromZoomOffset(
-    delta: number,
-    towards: Point,
-    from: Point,
-    scaling = { x: 1, y: 1 }
-) {
-    return {
-        x: +(from.x + (towards.x - from.x) * delta * scaling.x).toFixed(5),
-        y: +(from.y + (towards.y - from.y) * delta * scaling.y).toFixed(5),
     };
 }
 

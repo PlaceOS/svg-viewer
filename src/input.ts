@@ -6,13 +6,13 @@ import { BehaviorSubject, fromEvent, merge, Observable, Subscription } from 'rxj
 import { map } from 'rxjs/operators';
 import { clearAsyncTimeout, timeout } from './async';
 import {
-    calculateCenterFromZoomOffset,
     coordinatesForElement,
     coordinatesForPoint,
     distanceBetween,
     eventToPoint,
     log,
     middleOf,
+    transformPointTowards,
 } from './helpers';
 import { getViewer, postEvent, update } from './store';
 
@@ -235,10 +235,8 @@ export function handlePinch(id: string, event: TouchEvent, distance: number = _d
         ];
         const dist = distanceBetween(points[0], points[1]);
         const zoom = Math.max(0.5, Math.min(10, (view.zoom * dist) / distance));
-        const center =
-            zoom === 1 || zoom === 10 || zoom === view.zoom
-                ? view.center
-                : calculateCenterFromZoomOffset(+(dist / distance - 1).toFixed(5), _action_start, view.center);
+        const change = (1 - view.zoom / zoom);
+        const center = zoom != view.zoom ? transformPointTowards(view.center, _action_start, change) : view.center;
         _distance = dist;
         update(view, {
             zoom,
@@ -266,16 +264,11 @@ export function handleScrolling(id: string, event: WheelEvent) {
     if (view) {
         const delta = event.deltaY >= 0 ? -0.02 : 0.02;
         const zoom = Math.min(10, Math.max(0.5, view.zoom * (1 + delta)));
-        _action_start = coordinatesForPoint(view, eventToPoint(event));
+        const { x, y } = coordinatesForPoint(view, eventToPoint(event))
+        _action_start = { x: 1 - x, y: 1 - y } ;
         timeout('clear_action_start', () => _action_start = null as any);
-        const point = {
-            x: 1 - _action_start.x,
-            y: 1 - _action_start.y,
-        };
-        const center =
-            zoom === 1 || zoom === 10 || zoom === view.zoom
-                ? view.center
-                : calculateCenterFromZoomOffset(+(delta).toFixed(5), point, view.center, { x: view.svg_ratio, y: view.svg_ratio });
+        const change = (1 - view.zoom / zoom);
+        const center = zoom != view.zoom ? transformPointTowards(view.center, _action_start, change) : view.center;
         update(view, {
             zoom,
             center,
