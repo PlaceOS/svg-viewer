@@ -368,7 +368,7 @@ export function renderFeatures(viewer: Viewer) {
         feature_el_list.forEach((el) => {
             if (!el.parentNode) return;
             const track_id = el.getAttribute('track-id');
-            if (track_id === 'none' || viewer.features.find(_ => _.track_id !== track_id)) overlay_el.removeChild(el)
+            if (track_id === 'none' || !viewer.features.find(_ => _.track_id === track_id)) overlay_el.removeChild(el)
             else existing.push(el);
         });
         for (const feature of viewer.features) {
