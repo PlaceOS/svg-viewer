@@ -11,7 +11,6 @@ import {
     distanceBetween,
     eventToPoint,
     log,
-    middleOf,
     transformPointTowards,
 } from './helpers';
 import { getViewer, postEvent, update } from './store';
@@ -215,7 +214,11 @@ export function handlePinchStart(id: string, event: TouchEvent) {
             { x: event.touches[0].clientX, y: event.touches[0].clientY },
             { x: event.touches[1].clientX, y: event.touches[1].clientY },
         ];
-        const { x, y } = middleOf(points.map((_) => coordinatesForPoint(view, _)));
+        const map_points = points.map((_) => coordinatesForPoint(view, _))
+        const { x, y } = {
+            x: (map_points[0].x + map_points[1].x) / 2,
+            y: (map_points[0].y + map_points[1].y) / 2
+        };
         _action_start = { x: 1 - x, y: 1 - y };
         _distance = distanceBetween(points[0], points[1]);
         if (!(event instanceof MouseEvent)) {
