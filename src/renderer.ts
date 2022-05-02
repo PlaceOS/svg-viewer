@@ -81,7 +81,9 @@ export async function createView(viewer: Viewer) {
     /** Append SVG viewer to selected element */
     element.appendChild(container_el);
     const container_box = view_el?.getBoundingClientRect() || {};
-    viewer = update(viewer, { box: container_box });
+    const view = update(viewer, { box: container_box })!;
+    if (!view) return;
+    viewer = view;
     await setupElementMapping(viewer);
     listenForViewActions(viewer);
     listenForResize();
@@ -184,8 +186,10 @@ export async function renderToIFrame(viewer: Viewer) {
         window.attachEvent("onmessage", updateStyles);
     }
 </script>`;
+        const style: any = {};
+        const styles = styleMapToString({ ...viewer.styles, ...style });
         const svg64 = stringToBase64(
-            `<html><head><style>*{overflow:hidden;}html,body{padding:0;margin:0;}</style><style id="style"></style>${domain_js}</head><body>${svg_string}</body></html>`
+            `<html><head><style>*{overflow:hidden;}html,body{padding:0;margin:0;}</style><style id="style">${styles}</style>${domain_js}</head><body>${svg_string}</body></html>`
         );
         const b64Start = 'data:text/html;base64,';
         const image64 = b64Start + svg64;
@@ -278,12 +282,14 @@ export async function resizeView(viewer: Viewer) {
                     }
                     // Clear styles to redraw SVG to iframe
                     _styles[viewer.id] = '';
-                    viewer = update(viewer, {
+                    let view = update(viewer, {
                         ratio: box.height / box.width,
                         svg_ratio,
                         box: view_el_box as any,
                         content_ratio
                     });
+                    if (!view) return;
+                    viewer = view;
                     await renderView(viewer);
                     _resize_resolves[viewer.id].forEach((res) => res());
                     _resize_resolves[viewer.id] = [];

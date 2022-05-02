@@ -17,9 +17,7 @@ export const _svg_cache: HashMap<string> = {};
 export async function createViewer(options: Partial<Viewer>) {
     const view_list = listViewers();
     let viewer = view_list.find((v) => v.url === options.url);
-    if (viewer) {
-        return viewer.id;
-    }
+    if (viewer) return viewer.id;
     const svg_data = options.svg_data || (await loadSVGData(options.url));
     viewer = new Viewer({ ...options, svg_data });
     subscription(
@@ -39,9 +37,8 @@ export async function createViewer(options: Partial<Viewer>) {
 export function updateViewer(
     viewer: string | Viewer,
     options: Partial<Viewer>
-): Viewer {
-    const updated_viewer = update(viewer, options);
-    return updated_viewer;
+): Viewer | null {
+    return update(viewer, options);
 }
 
 /**

@@ -71,7 +71,8 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
     let mapping: HashMap<Rect> = {};
     const p_box = element?.getBoundingClientRect() || {};
     const children = element.querySelectorAll('[id]');
-    children.forEach((el) => {
+    element.id = 'svg-viewer-root';
+    const process = (el: Element) => {
         const box = el?.getBoundingClientRect() || {};
         mapping[el.id] = {
             x:
@@ -83,7 +84,14 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
             w: Math.floor((box.width / p_box.width) * 100000) / 100000,
             h: Math.floor((box.height / p_box.height) * 100000) / 100000,
         };
-    });
+    };
+    mapping['svg-viewer-root'] = {
+        x: 0.5,
+        y: 0.5,
+        w: 1,
+        h: 1,
+    };
+    children.forEach(process);
     return mapping;
 }
 
@@ -150,8 +158,8 @@ export function distanceBetween(first: Point, second: Point) {
 export function transformPointTowards(center: Point, point: Point, zoom_change: number): Point {
     const new_point = {
         x: center.x + (point.x - center.x) * zoom_change,
-        y: center.y + (point.y - center.y) * zoom_change
-    }
+        y: center.y + (point.y - center.y) * zoom_change,
+    };
     return new_point;
 }
 

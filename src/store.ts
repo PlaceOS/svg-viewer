@@ -27,10 +27,10 @@ export function getViewer(id: string): Viewer | undefined {
 export function update(
     viewer: string | Viewer,
     options: Partial<Viewer>,
-): Viewer {
+): Viewer | null {
     const view_list = listViewers();
     viewer = view_list.find((v) => v.id === (viewer instanceof Viewer ? viewer.id : viewer))!;
-    if (!(viewer instanceof Viewer)) throw new Error('Unable to find viewer');
+    if (!(viewer instanceof Viewer)) return null;
     delete options.url;
     const updated_viewer = new Viewer({ ...(viewer as Viewer), ...options });
     replace(updated_viewer);
