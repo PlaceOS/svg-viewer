@@ -434,7 +434,7 @@ export function renderActionZones(viewer: Viewer) {
             .forEach((el) => overlay_el.removeChild(el));
         for (const event of viewer.actions) {
             if (!event.action || !event.id || event.id === '*' || event.zone === false) continue;
-            const zone_el = document.createElement('div');
+            const zone_el = document.createElement('button');
             zone_el.id = `${event.id}`;
             const coordinates = viewer.mappings[event.id] || { x: 0, y: 0 };
             const size = viewer.mappings[event.id] || { w: 0, h: 0 };

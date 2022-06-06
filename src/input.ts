@@ -286,7 +286,7 @@ export function handleCustomEvents(details: ViewerEvent) {
     const viewer = getViewer(id);
     if (!viewer || !viewer.actions?.length) return;
     const action = viewer.actions.find(
-        (e) => e.action === type && (e.id === '*' || e.id === (event.target as any)?.id)
+        (e) => e.action.includes(type as any) && (e.id === '*' || e.id === (event.target as any)?.id)
     );
     if (!action) return;
     action.callback(event, coordinatesForPoint(viewer, eventToPoint(event as any)));

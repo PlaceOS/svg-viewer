@@ -107,7 +107,10 @@ export const STYLES = `
         display: initial;
     }
 
-    .action-zone {
+    .svg-viewer__svg-overlay-item.action-zone {
         pointer-events: auto;
+        background: none;
+        outline: none;
+        border: none;
     }
 `;
