@@ -2,7 +2,7 @@
 
 export { createViewer, updateViewer, removeViewer } from './api';
 
-export { getViewer, onViewerChange as listenToViewerChanges } from './store';
+export { getViewer, getViewerByURL, onViewerChange as listenToViewerChanges } from './store';
 
 export { clearRenderCache } from './renderer';
 

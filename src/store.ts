@@ -19,6 +19,10 @@ export function getViewer(id: string): Viewer | undefined {
     return _svg_viewers.getValue().find((viewer) => viewer.id === id);
 }
 
+export function getViewerByURL(url: string): Viewer | undefined {
+    return _svg_viewers.getValue().find((viewer) => viewer.url === url);
+}
+
 /**
  * Update the details of an SVG viewer
  * @param viewer Viewer or ID to update
