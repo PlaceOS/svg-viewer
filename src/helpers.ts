@@ -95,6 +95,22 @@ export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rec
     return mapping;
 }
 
+export function elementsInBox(viewer: Viewer, box: Rect) {
+    const elements: string[] = [];
+    for (const id in viewer.mappings) {
+        const el_box = viewer.mappings[id];
+        if (
+            el_box.x >= box.x &&
+            el_box.x <= box.x + box.w &&
+            el_box.y >= box.y &&
+            el_box.y <= box.y + box.h
+        ) {
+            elements.push(id);
+        }
+    }
+    return elements;
+}
+
 export function coordinatesForElement(viewer: Viewer, id: string, svg_box?: ClientRect) {
     const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
