@@ -30,7 +30,11 @@ subscription(
     on_resize.subscribe(() => {
         const viewer_list = listViewers();
         for (const viewer of viewer_list) {
-            timeout(`resize-${viewer.id}`, () => resizeView(viewer));
+            try {
+                timeout(`resize-${viewer.id}`, () => resizeView(viewer));
+            } catch (e) {
+                console.warn(e);
+            }
         }
     })
 );
@@ -125,8 +129,8 @@ export function renderView(viewer: Viewer) {
                 );
                 const scale = `scale(${viewer.zoom * viewer.svg_ratio})`;
                 if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
-                const x = (viewer.center.x - 0.5) * (100 * (viewer.zoom) * viewer.svg_ratio);
-                const y = (viewer.center.y - 0.5) * (100 * (viewer.zoom) * viewer.svg_ratio);
+                const x = (viewer.center.x - 0.5) * (100 * viewer.zoom * viewer.svg_ratio);
+                const y = (viewer.center.y - 0.5) * (100 * viewer.zoom * viewer.svg_ratio);
                 const translate = viewer.use_gpu
                     ? `translate3d(${x}%, ${y}%, 0)`
                     : `translate(${x}%, ${y}%)`;
@@ -136,9 +140,7 @@ export function renderView(viewer: Viewer) {
                 } .svg-viewer__svg-overlay-item > *:not([no-scale="true"]) { transform: rotate(-${
                     viewer.rotate
                 }deg) scale(${(1 / viewer.zoom) * (1 / viewer.svg_ratio)}); }`;
-                styles += `#${viewer.id} .svg-viewer__svg-overlay-item > * { transform: rotate(-${
-                    viewer.rotate
-                }deg); height: 100%; width: 100%; }`;
+                styles += `#${viewer.id} .svg-viewer__svg-overlay-item > * { transform: rotate(-${viewer.rotate}deg); height: 100%; width: 100%; }`;
                 styles_el.innerHTML = styles;
                 applyStylesToIframe(viewer);
                 focusOnFeature(viewer);
@@ -209,7 +211,7 @@ export async function applyStylesToIframe(viewer: Viewer) {
             iframe.onload = () => {
                 setTimeout(() => applyStylesToIframe(viewer), 50);
                 setTimeout(() => applyStylesToIframe(viewer), 500);
-            }
+            };
             return;
         }
         const style: any = {};
@@ -239,9 +241,7 @@ export async function resizeView(viewer: Viewer) {
                 const overlays_el: HTMLDivElement | null = element.querySelector(
                     '.svg-viewer__svg-overlays'
                 );
-                const render_el: HTMLDivElement | null = element.querySelector(
-                    `#${viewer.id}`
-                );
+                const render_el: HTMLDivElement | null = element.querySelector(`#${viewer.id}`);
                 const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
                 const svg_el: HTMLDivElement | null =
                     element.querySelector('.svg-viewer__svg-output');
@@ -275,9 +275,9 @@ export async function resizeView(viewer: Viewer) {
                     const overlay_box = overlays_el?.getBoundingClientRect();
                     let content_ratio = { x: 1, y: 1 };
                     if (render_box && overlay_box) {
-                        content_ratio = { 
-                            x: (overlay_box.width * svg_ratio * .975) / render_box.width, 
-                            y: (overlay_box.height * svg_ratio * .975) / render_box.height
+                        content_ratio = {
+                            x: (overlay_box.width * svg_ratio * 0.975) / render_box.width,
+                            y: (overlay_box.height * svg_ratio * 0.975) / render_box.height,
                         };
                     }
                     // Clear styles to redraw SVG to iframe
@@ -286,7 +286,7 @@ export async function resizeView(viewer: Viewer) {
                         ratio: box.height / box.width,
                         svg_ratio,
                         box: view_el_box as any,
-                        content_ratio
+                        content_ratio,
                     });
                     if (!view) return;
                     viewer = view;
@@ -374,7 +374,8 @@ export function renderFeatures(viewer: Viewer) {
         feature_el_list.forEach((el) => {
             if (!el.parentNode) return;
             const track_id = el.getAttribute('track-id');
-            if (track_id === 'none' || !viewer.features.find(_ => _.track_id === track_id)) overlay_el.removeChild(el)
+            if (track_id === 'none' || !viewer.features.find((_) => _.track_id === track_id))
+                overlay_el.removeChild(el);
             else existing.push(el);
         });
         for (const feature of viewer.features) {

@@ -65,6 +65,15 @@ const DEFAULT_ACTION_TYPES = [
     'wheel',
 ];
 
+const PREVENT_DEFAULT = [
+    'mousedown',
+    'mousemove',
+    'mousewheel',
+    'wheel',
+    'touchstart',
+    'touchmove',
+];
+
 let _listening_for_resize = false;
 
 window.addEventListener('blur', () => handlePinchAndPanEnd());
@@ -113,7 +122,9 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
     action_map[viewer.id] = merge(...action_list).subscribe((details) => {
         const { id, type, event } = details;
         const e: any = event;
-        e.preventDefault();
+        if (PREVENT_DEFAULT.includes(type)) {
+            e.preventDefault();
+        }
         handleCustomEvents(details);
         switch (type) {
             case 'touchstart':
@@ -188,14 +199,16 @@ export function handlePanning(id: string, event: MouseEvent, start: Point = _sta
                 0,
                 Math.min(
                     1,
-                    (point.x - start.x) / view.box.width / view.desired_zoom / view.svg_ratio + view.center.x
+                    (point.x - start.x) / view.box.width / view.desired_zoom / view.svg_ratio +
+                        view.center.x
                 )
             ),
             y: Math.max(
                 0,
                 Math.min(
                     1,
-                    (point.y - start.y) / view.box.height / view.desired_zoom / view.svg_ratio + view.center.y
+                    (point.y - start.y) / view.box.height / view.desired_zoom / view.svg_ratio +
+                        view.center.y
                 )
             ),
         };
@@ -214,10 +227,10 @@ export function handlePinchStart(id: string, event: TouchEvent) {
             { x: event.touches[0].clientX, y: event.touches[0].clientY },
             { x: event.touches[1].clientX, y: event.touches[1].clientY },
         ];
-        const map_points = points.map((_) => coordinatesForPoint(view, _))
+        const map_points = points.map((_) => coordinatesForPoint(view, _));
         const { x, y } = {
             x: (map_points[0].x + map_points[1].x) / 2,
-            y: (map_points[0].y + map_points[1].y) / 2
+            y: (map_points[0].y + map_points[1].y) / 2,
         };
         _action_start = { x: 1 - x, y: 1 - y };
         _distance = distanceBetween(points[0], points[1]);
@@ -238,8 +251,11 @@ export function handlePinch(id: string, event: TouchEvent, distance: number = _d
         ];
         const dist = distanceBetween(points[0], points[1]);
         const zoom = Math.max(0.5, Math.min(10, (view.zoom * dist) / distance));
-        const change = (1 - view.zoom / zoom);
-        const center = zoom != view.zoom ? transformPointTowards(view.center, _action_start, change) : view.center;
+        const change = 1 - view.zoom / zoom;
+        const center =
+            zoom != view.zoom
+                ? transformPointTowards(view.center, _action_start, change)
+                : view.center;
         _distance = dist;
         update(view, {
             zoom,
@@ -267,11 +283,14 @@ export function handleScrolling(id: string, event: WheelEvent) {
     if (view) {
         const delta = event.deltaY >= 0 ? -0.02 : 0.02;
         const zoom = Math.min(10, Math.max(0.5, view.zoom * (1 + delta)));
-        const { x, y } = coordinatesForPoint(view, eventToPoint(event))
-        _action_start = { x: 1 - x, y: 1 - y } ;
-        timeout('clear_action_start', () => _action_start = null as any);
-        const change = (1 - view.zoom / zoom);
-        const center = zoom != view.zoom ? transformPointTowards(view.center, _action_start, change) : view.center;
+        const { x, y } = coordinatesForPoint(view, eventToPoint(event));
+        _action_start = { x: 1 - x, y: 1 - y };
+        timeout('clear_action_start', () => (_action_start = null as any));
+        const change = 1 - view.zoom / zoom;
+        const center =
+            zoom != view.zoom
+                ? transformPointTowards(view.center, _action_start, change)
+                : view.center;
         update(view, {
             zoom,
             center,
@@ -286,7 +305,8 @@ export function handleCustomEvents(details: ViewerEvent) {
     const viewer = getViewer(id);
     if (!viewer || !viewer.actions?.length) return;
     const action = viewer.actions.find(
-        (e) => e.action.includes(type as any) && (e.id === '*' || e.id === (event.target as any)?.id)
+        (e) =>
+            e.action.includes(type as any) && (e.id === '*' || e.id === (event.target as any)?.id)
     );
     if (!action) return;
     action.callback(event, coordinatesForPoint(viewer, eventToPoint(event as any)));
