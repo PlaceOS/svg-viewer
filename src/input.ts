@@ -304,7 +304,8 @@ export function handleCustomEvents(details: ViewerEvent) {
     const { id, type, event } = details;
     const viewer = getViewer(id);
     if (!viewer || !viewer.actions?.length) return;
-    const action = viewer.actions.find(
+    const action_list = viewer.actions.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    const action = action_list.find(
         (e) =>
             e.action.includes(type as any) && (e.id === '*' || e.id === (event.target as any)?.id)
     );

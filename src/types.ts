@@ -50,14 +50,25 @@ export interface ViewerFocusFeature {
     readonly zoom_level: number;
 }
 
-export type ViewActionTypes = 'click' | 'mousedown' | 'mouseup' | 'touchstart' | 'touchend' | 'enter' | 'leave' | '*';
+export type ViewActionTypes =
+    | 'click'
+    | 'mousedown'
+    | 'mouseup'
+    | 'touchstart'
+    | 'touchend'
+    | 'enter'
+    | 'leave'
+    | '*';
+
 export interface ViewAction {
     /** ID of the element to listen for actions */
     readonly id: string;
     /** Action to listen for on the SVG */
-    readonly action: ViewActionTypes | ViewActionTypes[] ;
+    readonly action: ViewActionTypes | ViewActionTypes[];
     /** Whether an interaction area is needed for listening to */
     readonly zone?: boolean;
+    /** Priority of the action */
+    readonly priority?: number;
     /** Callback for event action */
     readonly callback: (e: Event, p?: Point) => void;
 }
