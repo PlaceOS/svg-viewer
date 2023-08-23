@@ -290,7 +290,11 @@ export async function resizeView(viewer: Viewer) {
                     });
                     if (!view) return;
                     viewer = view;
-                    await renderView(viewer);
+                    const status = await renderView(viewer).catch((e) => {
+                        console.warn(e);
+                        return false;
+                    });
+                    if (!status) return;
                     _resize_resolves[viewer.id].forEach((res) => res());
                     _resize_resolves[viewer.id] = [];
                 });

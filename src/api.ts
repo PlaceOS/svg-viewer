@@ -22,7 +22,9 @@ export async function createViewer(options: Partial<Viewer>) {
     viewer = new Viewer({ ...options, svg_data });
     subscription(
         `${viewer.id}-render`,
-        onViewerChange(viewer.id).subscribe((view) => renderView(view))
+        onViewerChange(viewer.id).subscribe((view) =>
+            renderView(view).catch((e) => console.warn(e))
+        )
     );
     replace(viewer);
     await createView(viewer);
@@ -34,10 +36,7 @@ export async function createViewer(options: Partial<Viewer>) {
  * @param viewer Viewer or ID to update
  * @param options New details for the viewer
  */
-export function updateViewer(
-    viewer: string | Viewer,
-    options: Partial<Viewer>
-): Viewer | null {
+export function updateViewer(viewer: string | Viewer, options: Partial<Viewer>): Viewer | null {
     return update(viewer, options);
 }
 
