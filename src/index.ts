@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 
-export { createViewer, updateViewer, removeViewer } from './api';
+export { createViewer, updateViewer, removeViewer, setCustomHeaders } from './api';
 
 export { getViewer, getViewerByURL, onViewerChange as listenToViewerChanges } from './store';
 
