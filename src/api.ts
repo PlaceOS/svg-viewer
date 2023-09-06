@@ -9,13 +9,13 @@ import { Viewer } from './viewer.class';
  * Mapping of URLs to their respective SVG data
  */
 export const _svg_cache: HashMap<string> = {};
-const CUSTOM_HEADERS = new Headers({
+const CUSTOM_HEADERS: Record<string, string> = {
     'Content-Type': 'image/svg+xml',
-});
+};
 
 /** Sets custom headers for requests to retrieve SVG data */
 export function setCustomHeaders(headers: Headers) {
-    headers.forEach((value, key) => CUSTOM_HEADERS.set(key, value));
+    headers.forEach((value, key) => (CUSTOM_HEADERS[key] = value));
 }
 
 /**
@@ -71,7 +71,10 @@ export function removeViewer(id: string) {
 export async function loadSVGData(url: string = '') {
     const resp = _svg_cache[url]
         ? { text: async () => _svg_cache[url] }
-        : await fetch(url, url.startsWith(location.origin) ? { headers: CUSTOM_HEADERS } : {});
+        : await fetch(
+              url,
+              url.startsWith(location.origin) ? { headers: new Headers(CUSTOM_HEADERS) } : {}
+          );
     const text = await resp.text();
     _svg_cache[url] = text;
     return text;
