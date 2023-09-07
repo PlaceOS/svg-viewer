@@ -1,4 +1,5 @@
 import { subscription, unsubscribeWith } from './async';
+import { log } from './helpers';
 import { createView, renderView } from './renderer';
 import { del, getViewer, listViewers, onViewerChange, replace, update } from './store';
 import { HashMap } from './types';
@@ -9,13 +10,13 @@ import { Viewer } from './viewer.class';
  * Mapping of URLs to their respective SVG data
  */
 export const _svg_cache: HashMap<string> = {};
-const CUSTOM_HEADERS: Record<string, string> = {
-    'Content-Type': 'image/svg+xml',
-};
+const CUSTOM_HEADERS: Record<string, string> = {};
 
 /** Sets custom headers for requests to retrieve SVG data */
-export function setCustomHeaders(headers: Headers) {
-    headers.forEach((value, key) => (CUSTOM_HEADERS[key] = value));
+export function setCustomHeaders(headers: Record<string, string>) {
+    for (const key in headers) {
+        CUSTOM_HEADERS[key.toLowerCase()] = headers[key];
+    }
 }
 
 /**
@@ -69,12 +70,17 @@ export function removeViewer(id: string) {
  * @param url URL to load SVG data for
  */
 export async function loadSVGData(url: string = '') {
-    const resp = _svg_cache[url]
-        ? { text: async () => _svg_cache[url] }
-        : await fetch(
-              url,
-              url.startsWith(location.origin) ? { headers: new Headers(CUSTOM_HEADERS) } : {}
-          );
+    const headers = new Headers();
+    if (url.startsWith(location.origin) || url.startsWith('/')) {
+        for (const key in CUSTOM_HEADERS) {
+            headers.append(key, CUSTOM_HEADERS[key]);
+        }
+    }
+    if (_svg_cache[url]) return _svg_cache[url];
+    const resp = await fetch(url, { headers }).catch((e) => {
+        log('SVG VIEWER', 'Failed to load map', e, 'error');
+        return { text: async () => '' };
+    });
     const text = await resp.text();
     _svg_cache[url] = text;
     return text;
