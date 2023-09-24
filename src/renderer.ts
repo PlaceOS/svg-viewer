@@ -386,7 +386,7 @@ export function renderFeatures(viewer: Viewer) {
             if (!feature.content || existing.includes(feature.content)) continue;
             let coordinates = { x: 0, y: 0 };
             let size = { w: 0, h: 0 };
-            const feature_container_el = document.createElement('div');
+            const feature_container_el = document.createElement('button');
             if (typeof feature.location === 'string') {
                 feature_container_el.id = `${feature.location}`;
                 coordinates = viewer.mappings[feature.location] || coordinates;
