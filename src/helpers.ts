@@ -1,4 +1,4 @@
-import { HashMap, Point, Rect } from './types';
+import { Point, Rect } from './types';
 import { Viewer } from './viewer.class';
 
 declare global {
@@ -24,7 +24,7 @@ export function log(
     args?: any,
     stream: ConsoleStream = 'debug',
     force: boolean = false,
-    app_name: string = 'SVG VIEWER'
+    app_name: string = 'SVG VIEWER',
 ) {
     if (window.debug || force) {
         const colors: string[] = ['color: #E91E63', 'color: #ffb300', 'color: default'];
@@ -66,9 +66,9 @@ export function eventToPoint(event: MouseEvent | TouchEvent): Point {
         : { x: -1, y: -1 };
 }
 
-export function generateCoordinateListForTree(element: HTMLElement): HashMap<Rect> {
+export function generateCoordinateListForTree(element: HTMLElement): Record<string, Rect> {
     if (!element) return {};
-    let mapping: HashMap<Rect> = {};
+    let mapping: Record<string, Rect> = {};
     const p_box = element?.getBoundingClientRect() || {};
     const children = element.querySelectorAll('[id]');
     element.id = 'svg-viewer-root';
@@ -133,7 +133,7 @@ export function coordinatesForPoint(
     viewer: Viewer,
     point: Point,
     svg_box?: ClientRect,
-    zoom: number = 1
+    zoom: number = 1,
 ) {
     const overlay_el = viewer.element?.querySelector(`.svg-viewer__svg-overlays`);
     const svg_el = viewer.element?.querySelector(`svg`);
@@ -225,14 +225,14 @@ export function uint6ToB64(nUint6: number) {
     return nUint6 < 26
         ? nUint6 + 65
         : nUint6 < 52
-        ? nUint6 + 71
-        : nUint6 < 62
-        ? nUint6 - 4
-        : nUint6 === 62
-        ? 43
-        : nUint6 === 63
-        ? 47
-        : 65;
+          ? nUint6 + 71
+          : nUint6 < 62
+            ? nUint6 - 4
+            : nUint6 === 62
+              ? 43
+              : nUint6 === 63
+                ? 47
+                : 65;
 }
 
 export function base64EncArr(aBytes: Uint8Array) {
@@ -250,7 +250,7 @@ export function base64EncArr(aBytes: Uint8Array) {
                 uint6ToB64((nUint24 >>> 18) & 63),
                 uint6ToB64((nUint24 >>> 12) & 63),
                 uint6ToB64((nUint24 >>> 6) & 63),
-                uint6ToB64(nUint24 & 63)
+                uint6ToB64(nUint24 & 63),
             );
             nUint24 = 0;
         }
@@ -281,14 +281,14 @@ export function strToUTF8Arr(sDOMStr: string) {
             nChr < 0x80
                 ? 1
                 : nChr < 0x800
-                ? 2
-                : nChr < 0x10000
-                ? 3
-                : nChr < 0x200000
-                ? 4
-                : nChr < 0x4000000
-                ? 5
-                : 6;
+                  ? 2
+                  : nChr < 0x10000
+                    ? 3
+                    : nChr < 0x200000
+                      ? 4
+                      : nChr < 0x4000000
+                        ? 5
+                        : 6;
     }
 
     aBytes = new Uint8Array(nArrLen);

@@ -9,7 +9,7 @@ import { Viewer } from './viewer.class';
 export const _svg_viewers = new BehaviorSubject<Viewer[]>([]);
 export const _global_events = new Subject<string>();
 
-export const on_resize = _global_events.pipe(filter(_ => _ === 'resize'));
+export const on_resize = _global_events.pipe(filter((_) => _ === 'resize'));
 
 export function postEvent(str: string) {
     _global_events.next(str);
@@ -28,10 +28,7 @@ export function getViewerByURL(url: string): Viewer | undefined {
  * @param viewer Viewer or ID to update
  * @param options New details for the viewer
  */
-export function update(
-    viewer: string | Viewer,
-    options: Partial<Viewer>,
-): Viewer | null {
+export function update(viewer: string | Viewer, options: Partial<Viewer>): Viewer | null {
     const view_list = listViewers();
     viewer = view_list.find((v) => v.id === (viewer instanceof Viewer ? viewer.id : viewer))!;
     if (!(viewer instanceof Viewer)) return null;
@@ -52,18 +49,18 @@ export function onViewerChange(id: string): Observable<Viewer> {
     return _svg_viewers.pipe(
         filter((list) => !!list.find((viewer) => viewer.id === id)),
         map((list) => list.find((viewer) => viewer.id === id)),
-        distinct()
+        distinct(),
     ) as any;
 }
 
 export function replace(viewer: Viewer) {
-    const list = listViewers().filter(v => v.id !== viewer.id);
+    const list = listViewers().filter((v) => v.id !== viewer.id);
     list.push(viewer);
     _svg_viewers.next(list);
 }
 
 export function del(viewer: Viewer) {
-    const list = listViewers().filter(v => v.id !== viewer.id);
+    const list = listViewers().filter((v) => v.id !== viewer.id);
     _svg_viewers.next(list);
 }
 

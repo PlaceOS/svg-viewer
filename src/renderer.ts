@@ -8,22 +8,22 @@ import {
 } from './helpers';
 import { focusOnFeature, listenForResize, listenForViewActions } from './input';
 import { listViewers, on_resize, update } from './store';
-import { HashMap, Rect, ViewerStyles } from './types';
+import { Rect, ViewerStyles } from './types';
 import { Viewer } from './viewer.class';
 
-const _animation_frames: HashMap<Promise<void>> = {};
+const _animation_frames: Record<string, Promise<void>> = {};
 
-const _element_mappings: HashMap<HashMap<Rect>> = {};
+const _element_mappings: Record<string, Record<string, Rect>> = {};
 /** Map of viewer to last rendered labels */
-const _labels: HashMap<string> = {};
+const _labels: Record<string, string> = {};
 /** Map of viewer to last rendered features */
-const _features: HashMap<string> = {};
+const _features: Record<string, string> = {};
 /** Map of viewer to last rendered zones */
-const _zones: HashMap<string> = {};
+const _zones: Record<string, string> = {};
 /** Map of viewer to last rendered styles */
-const _styles: HashMap<string> = {};
+const _styles: Record<string, string> = {};
 /** Map of viewer to last rendered styles */
-const _resize_resolves: HashMap<(() => void)[]> = {};
+const _resize_resolves: Record<string, (() => void)[]> = {};
 
 subscription(
     'on_resize',
@@ -36,7 +36,7 @@ subscription(
                 console.warn(e);
             }
         }
-    })
+    }),
 );
 
 export function clearRenderCache(viewer: Viewer) {
@@ -102,7 +102,7 @@ export function setupElementMapping(viewer: Viewer) {
                 return timeout(
                     `${viewer.id}-setup`,
                     () => setupElementMapping(viewer).then((_) => resolve()),
-                    100
+                    100,
                 );
             const element_map = _element_mappings[viewer.url] || generateCoordinateListForTree(svg);
             _element_mappings[viewer.url] = element_map;
@@ -125,7 +125,7 @@ export function renderView(viewer: Viewer) {
                 const styles_el: HTMLStyleElement | null = element.querySelector('style');
                 let styles = ``;
                 const render_el: HTMLDivElement | null = element.querySelector(
-                    '.svg-viewer__render-container'
+                    '.svg-viewer__render-container',
                 );
                 const scale = `scale(${viewer.zoom * viewer.svg_ratio})`;
                 if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
@@ -168,7 +168,7 @@ export async function renderToIFrame(viewer: Viewer) {
             ? svg_string
             : svg_string.replace(
                   `<svg`,
-                  `<svg width="${view_box.width}" height="${view_box.height}" `
+                  `<svg width="${view_box.width}" height="${view_box.height}" `,
               );
         const domain_js = `
 <script>
@@ -191,7 +191,7 @@ export async function renderToIFrame(viewer: Viewer) {
         const style: any = {};
         const styles = styleMapToString({ ...viewer.styles, ...style });
         const svg64 = stringToBase64(
-            `<html><head><style>*{overflow:hidden;}html,body{padding:0;margin:0;}</style><style id="style">${styles}</style>${domain_js}</head><body>${svg_string}</body></html>`
+            `<html><head><style>*{overflow:hidden;}html,body{padding:0;margin:0;}</style><style id="style">${styles}</style>${domain_js}</head><body>${svg_string}</body></html>`,
         );
         const b64Start = 'data:text/html;base64,';
         const image64 = b64Start + svg64;
@@ -219,7 +219,7 @@ export async function applyStylesToIframe(viewer: Viewer) {
         const styles = styleMapToString({ ...viewer.styles, ...style });
         iframe.contentWindow.postMessage(
             JSON.stringify({ id: 'svg-styles', content: styles }),
-            '*'
+            '*',
         );
     }
 }
@@ -236,10 +236,10 @@ export async function resizeView(viewer: Viewer) {
                 const element: HTMLElement | null = viewer.element;
                 if (!element) throw new Error('No element set on viewer');
                 const view_el: HTMLDivElement | null = element.querySelector(
-                    '.svg-viewer__view-container'
+                    '.svg-viewer__view-container',
                 );
                 const overlays_el: HTMLDivElement | null = element.querySelector(
-                    '.svg-viewer__svg-overlays'
+                    '.svg-viewer__svg-overlays',
                 );
                 const render_el: HTMLDivElement | null = element.querySelector(`#${viewer.id}`);
                 const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
@@ -269,7 +269,7 @@ export async function resizeView(viewer: Viewer) {
                     iframe_el.height = `${view_box.height}`;
                     const svg_ratio = Math.min(
                         container_box.height / view_box.height,
-                        container_box.width / view_box.width
+                        container_box.width / view_box.width,
                     );
                     const render_box = render_el?.getBoundingClientRect();
                     const overlay_box = overlays_el?.getBoundingClientRect();
@@ -299,7 +299,7 @@ export async function resizeView(viewer: Viewer) {
                     _resize_resolves[viewer.id] = [];
                 });
             },
-            100
+            100,
         );
     });
 }
@@ -366,7 +366,11 @@ export function renderLabels(viewer: Viewer) {
 
 export function renderFeatures(viewer: Viewer) {
     const features_string = JSON.stringify(
-        viewer.features.map((i) => ({ ...i, content: '', data: simplifyDataObject(i.data) as any }))
+        viewer.features.map((i) => ({
+            ...i,
+            content: '',
+            data: simplifyDataObject(i.data) as any,
+        })),
     );
     if (features_string !== _features[viewer.id]) {
         const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');

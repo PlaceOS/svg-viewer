@@ -61,7 +61,7 @@ export function timeout(name: string, fn: () => void, delay: number = 300) {
         throw new Error(
             name
                 ? 'Cannot create named timeout without a name'
-                : 'Cannot create a timeout without a callback'
+                : 'Cannot create a timeout without a callback',
         );
     }
 }
@@ -93,7 +93,7 @@ export function interval(name: string, fn: () => void, delay: number = 300) {
         throw new Error(
             name
                 ? 'Cannot create named interval without a name'
-                : 'Cannot create a interval without a callback'
+                : 'Cannot create a interval without a callback',
         );
     }
 }

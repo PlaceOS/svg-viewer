@@ -15,7 +15,7 @@ import {
 } from './helpers';
 import { getViewer, postEvent, update } from './store';
 
-import { HashMap, Point } from './types';
+import { Point } from './types';
 import { Viewer } from './viewer.class';
 
 export interface ViewerEvent<T extends Event = Event> {
@@ -34,9 +34,9 @@ export interface ViewerAction {
     fn: (_: Event) => void;
 }
 /** Mapping of Viewers to the lister actions */
-const _view_actions = new BehaviorSubject<HashMap<Subscription>>({});
+const _view_actions = new BehaviorSubject<Record<string, Subscription>>({});
 /** Mapping of custom action hash to viewer */
-const _focus_feature_map: HashMap<string> = {};
+const _focus_feature_map: Record<string, string> = {};
 /** Whether user is currently performming a pinch */
 let _pinching: boolean = false;
 /** Whether user is currently performing a pan */
@@ -116,7 +116,7 @@ export function listenForViewActions(viewer: Viewer, actions: string[] = DEFAULT
 
     for (const type of actions) {
         action_list.push(
-            fromEvent(element, type).pipe(map((e) => ({ id: viewer.id, type, event: e })))
+            fromEvent(element, type).pipe(map((e) => ({ id: viewer.id, type, event: e }))),
         );
     }
     action_map[viewer.id] = merge(...action_list).subscribe((details) => {
@@ -200,16 +200,16 @@ export function handlePanning(id: string, event: MouseEvent, start: Point = _sta
                 Math.min(
                     1,
                     (point.x - start.x) / view.box.width / view.desired_zoom / view.svg_ratio +
-                        view.center.x
-                )
+                        view.center.x,
+                ),
             ),
             y: Math.max(
                 0,
                 Math.min(
                     1,
                     (point.y - start.y) / view.box.height / view.desired_zoom / view.svg_ratio +
-                        view.center.y
-                )
+                        view.center.y,
+                ),
             ),
         };
         _start_point = point;
@@ -307,7 +307,7 @@ export function handleCustomEvents(details: ViewerEvent) {
     const action_list = viewer.actions.sort((a, b) => (b.priority || 0) - (a.priority || 0));
     const action = action_list.find(
         (e) =>
-            e.action.includes(type as any) && (e.id === '*' || e.id === (event.target as any)?.id)
+            e.action.includes(type as any) && (e.id === '*' || e.id === (event.target as any)?.id),
     );
     if (!action) return;
     action.callback(event, coordinatesForPoint(viewer, eventToPoint(event as any)));

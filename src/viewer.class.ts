@@ -1,15 +1,14 @@
 import { Md5 } from 'ts-md5';
 
 import {
+    Point,
+    Rect,
+    ViewAction,
     ViewerFeature,
     ViewerFocusFeature,
     ViewerLabel,
-    Point,
-    ViewerStyles,
-    ViewAction,
     ViewerOptions,
-    HashMap,
-    Rect,
+    ViewerStyles,
 } from './types';
 
 /**
@@ -68,7 +67,7 @@ export class Viewer {
     /**  */
     public readonly updated_count: number;
     /** Mapping of element positions to their IDs */
-    public readonly mappings: HashMap<Rect>;
+    public readonly mappings: Record<string, Rect>;
     /** Whether to use GPU for rendering map view changes */
     public readonly use_gpu: boolean;
     /** Ratio of the map rendered to the container element */

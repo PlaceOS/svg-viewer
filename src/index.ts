@@ -1,22 +1,23 @@
 /* istanbul ignore file */
 
-export { createViewer, updateViewer, removeViewer, setCustomHeaders } from './api';
+export { createViewer, removeViewer, setCustomHeaders, updateViewer } from './api';
 
 export { getViewer, getViewerByURL, onViewerChange as listenToViewerChanges } from './store';
 
 export { clearRenderCache } from './renderer';
 
-export {
-    ViewerLabel,
-    ViewerFeature,
-    ViewerStyles,
-    ViewAction,
-    ViewerFocusFeature,
+export type {
     Point,
+    ViewAction,
+    ViewerFeature,
+    ViewerFocusFeature,
+    ViewerLabel,
+    ViewerStyles,
 } from './types';
 
 export { coordinatesForElement, relativeSizeOfElement } from './helpers';
 
-export { Viewer, Box } from './viewer.class';
+export { Viewer } from './viewer.class';
+export type { Box } from './viewer.class';
 
 export { applyGlobalStyles } from './root-styles';

@@ -2,14 +2,13 @@ import { subscription, unsubscribeWith } from './async';
 import { log } from './helpers';
 import { createView, renderView } from './renderer';
 import { del, getViewer, listViewers, onViewerChange, replace, update } from './store';
-import { HashMap } from './types';
 import { Viewer } from './viewer.class';
 
 /**
  * @hidden
  * Mapping of URLs to their respective SVG data
  */
-export const _svg_cache: HashMap<string> = {};
+export const _svg_cache: Record<string, string> = {};
 const CUSTOM_HEADERS: Record<string, string> = {};
 
 /** Sets custom headers for requests to retrieve SVG data */
@@ -32,8 +31,8 @@ export async function createViewer(options: Partial<Viewer>) {
     subscription(
         `${viewer.id}-render`,
         onViewerChange(viewer.id).subscribe((view) =>
-            renderView(view).catch((e) => console.warn(e))
-        )
+            renderView(view).catch((e) => console.warn(e)),
+        ),
     );
     replace(viewer);
     await createView(viewer);
