@@ -5,6 +5,7 @@
 /tmp
 /out-tsc
 /docs
+placeos-svg-viewer-*.tgz
 
 # dependencies
 /node_modules

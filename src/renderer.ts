@@ -97,14 +97,18 @@ export async function createView(viewer: Viewer) {
 export function setupElementMapping(viewer: Viewer) {
     return new Promise<void>((resolve) => {
         requestAnimationFrame(() => {
-            const svg: HTMLElement = viewer.element?.querySelector('svg') as any;
+            const svg: HTMLElement = viewer.element?.querySelector(
+                'svg',
+            ) as any;
             if (!svg || !svg.clientWidth)
                 return timeout(
                     `${viewer.id}-setup`,
                     () => setupElementMapping(viewer).then((_) => resolve()),
                     100,
                 );
-            const element_map = _element_mappings[viewer.url] || generateCoordinateListForTree(svg);
+            const element_map =
+                _element_mappings[viewer.url] ||
+                generateCoordinateListForTree(svg);
             _element_mappings[viewer.url] = element_map;
             update(viewer, { mappings: element_map });
             svg.style.display = 'none';
@@ -122,15 +126,21 @@ export function renderView(viewer: Viewer) {
                 if (!_animation_frames[viewer.id]) return;
                 const element: HTMLElement | null = viewer.element;
                 if (!element) throw new Error('No element set on viewer');
-                const styles_el: HTMLStyleElement | null = element.querySelector('style');
+                const styles_el: HTMLStyleElement | null =
+                    element.querySelector('style');
                 let styles = ``;
                 const render_el: HTMLDivElement | null = element.querySelector(
                     '.svg-viewer__render-container',
                 );
                 const scale = `scale(${viewer.zoom * viewer.svg_ratio})`;
-                if (!render_el || !styles_el) throw new Error('Viewer is not setup yet.');
-                const x = (viewer.center.x - 0.5) * (100 * viewer.zoom * viewer.svg_ratio);
-                const y = (viewer.center.y - 0.5) * (100 * viewer.zoom * viewer.svg_ratio);
+                if (!render_el || !styles_el)
+                    throw new Error('Viewer is not setup yet.');
+                const x =
+                    (viewer.center.x - 0.5) *
+                    (100 * viewer.zoom * viewer.svg_ratio);
+                const y =
+                    (viewer.center.y - 0.5) *
+                    (100 * viewer.zoom * viewer.svg_ratio);
                 const translate = viewer.use_gpu
                     ? `translate3d(${x}%, ${y}%, 0)`
                     : `translate(${x}%, ${y}%)`;
@@ -159,10 +169,15 @@ export async function renderToIFrame(viewer: Viewer) {
     if (style_string.localeCompare(_styles[viewer.id])) {
         const element: HTMLElement | null = viewer.element;
         if (!element) throw new Error('No element set on viewer');
-        const iframe: HTMLIFrameElement | null = element.querySelector('.svg-viewer__iframe');
-        const svg_el: HTMLDivElement = element.querySelector('.svg-viewer__svg-output') as any;
+        const iframe: HTMLIFrameElement | null = element.querySelector(
+            '.svg-viewer__iframe',
+        );
+        const svg_el: HTMLDivElement = element.querySelector(
+            '.svg-viewer__svg-output',
+        ) as any;
         if (!iframe) throw new Error('No iframe created for viewer');
-        const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
+        const view_box =
+            (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
         let svg_string = `${viewer.svg_data}`;
         svg_string = /<svg[^>]*width="[^>]*>/.test(svg_string)
             ? svg_string
@@ -205,7 +220,9 @@ export async function applyStylesToIframe(viewer: Viewer) {
     if (style_string.localeCompare(_styles[viewer.id])) {
         const element: HTMLElement | null = viewer.element;
         if (!element) throw new Error('No element set on viewer');
-        const iframe: HTMLIFrameElement | null = element.querySelector('.svg-viewer__iframe');
+        const iframe: HTMLIFrameElement | null = element.querySelector(
+            '.svg-viewer__iframe',
+        );
         if (!iframe) throw new Error('No iframe created for viewer');
         if (!iframe.contentWindow) {
             iframe.onload = () => {
@@ -238,26 +255,35 @@ export async function resizeView(viewer: Viewer) {
                 const view_el: HTMLDivElement | null = element.querySelector(
                     '.svg-viewer__view-container',
                 );
-                const overlays_el: HTMLDivElement | null = element.querySelector(
-                    '.svg-viewer__svg-overlays',
+                const overlays_el: HTMLDivElement | null =
+                    element.querySelector('.svg-viewer__svg-overlays');
+                const render_el: HTMLDivElement | null = element.querySelector(
+                    `#${viewer.id}`,
                 );
-                const render_el: HTMLDivElement | null = element.querySelector(`#${viewer.id}`);
-                const container_el: HTMLDivElement = element.querySelector('.svg-viewer') as any;
-                const svg_el: HTMLDivElement | null =
-                    element.querySelector('.svg-viewer__svg-output');
+                const container_el: HTMLDivElement = element.querySelector(
+                    '.svg-viewer',
+                ) as any;
+                const svg_el: HTMLDivElement | null = element.querySelector(
+                    '.svg-viewer__svg-output',
+                );
                 const iframe_el = element.querySelector('iframe');
-                const container_box = container_el?.getBoundingClientRect() || {};
+                const container_box =
+                    container_el?.getBoundingClientRect() || {};
                 const view_el_box = view_el?.getBoundingClientRect() || {};
                 if (!overlays_el || !svg_el || !iframe_el || !view_el)
                     throw new Error('Viewer elements not ready yet.');
                 requestAnimationFrame(async () => {
                     const ratio = container_box.height / container_box.width;
-                    const view_box = (svg_el.firstElementChild as any)?.viewBox?.baseVal || {};
+                    const view_box =
+                        (svg_el.firstElementChild as any)?.viewBox?.baseVal ||
+                        {};
                     const ratio_svg = view_box.height / view_box.width;
                     if (svg_el.firstElementChild) {
                         (svg_el.firstElementChild as any).style.width = '200%';
                     }
-                    const width = (container_box.width - 32) * Math.min(1, ratio / ratio_svg);
+                    const width =
+                        (container_box.width - 32) *
+                        Math.min(1, ratio / ratio_svg);
                     const box = { width, height: width * ratio_svg };
                     overlays_el.style.width = view_box.width + 'px';
                     overlays_el.style.height = view_box.height + 'px';
@@ -276,8 +302,12 @@ export async function resizeView(viewer: Viewer) {
                     let content_ratio = { x: 1, y: 1 };
                     if (render_box && overlay_box) {
                         content_ratio = {
-                            x: (overlay_box.width * svg_ratio * 0.975) / render_box.width,
-                            y: (overlay_box.height * svg_ratio * 0.975) / render_box.height,
+                            x:
+                                (overlay_box.width * svg_ratio * 0.975) /
+                                render_box.width,
+                            y:
+                                (overlay_box.height * svg_ratio * 0.975) /
+                                render_box.height,
                         };
                     }
                     // Clear styles to redraw SVG to iframe
@@ -307,11 +337,17 @@ export async function resizeView(viewer: Viewer) {
 export function renderOverlays(viewer: Viewer): void {
     const svg_el = viewer.element?.querySelector(`svg`);
     if (!Object.keys(viewer.mappings || {}).length) return;
-    const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
+    const overlay_el = viewer.element?.querySelector(
+        '.svg-viewer__svg-overlays',
+    );
     if (!overlay_el || !svg_el) return;
     const box = overlay_el.getBoundingClientRect();
     if (!box.width)
-        return timeout(`${viewer.id}|render-overlays`, () => renderOverlays(viewer), 50);
+        return timeout(
+            `${viewer.id}|render-overlays`,
+            () => renderOverlays(viewer),
+            50,
+        );
     requestAnimationFrame(() => {
         renderLabels(viewer);
         renderActionZones(viewer);
@@ -320,14 +356,22 @@ export function renderOverlays(viewer: Viewer): void {
 }
 
 export function renderLabels(viewer: Viewer) {
-    const label_list = viewer.labels.filter((_) => !_.zoom_level || _.zoom_level <= viewer.zoom);
+    const label_list = viewer.labels.filter(
+        (_) => !_.zoom_level || _.zoom_level <= viewer.zoom,
+    );
     const labels_string = JSON.stringify(label_list);
     if (labels_string !== _labels[viewer.id]) {
-        const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
+        const overlay_el = viewer.element?.querySelector(
+            '.svg-viewer__svg-overlays',
+        );
         if (!overlay_el) return;
-        const label_el_list: Element[] = Array.from(overlay_el.querySelectorAll('[label]'));
+        const label_el_list: Element[] = Array.from(
+            overlay_el.querySelectorAll('[label]'),
+        );
         /** Remove existing labels */
-        label_el_list.filter((el) => el.parentNode).forEach((el) => overlay_el.removeChild(el));
+        label_el_list
+            .filter((el) => el.parentNode)
+            .forEach((el) => overlay_el.removeChild(el));
         for (const label of label_list) {
             let coordinates = { x: 0, y: 0 };
             let for_value = '~Nothing~';
@@ -373,7 +417,9 @@ export function renderFeatures(viewer: Viewer) {
         })),
     );
     if (features_string !== _features[viewer.id]) {
-        const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
+        const overlay_el = viewer.element?.querySelector(
+            '.svg-viewer__svg-overlays',
+        );
         if (!overlay_el) return console.log('Unable to get overlay element.');
         const feature_el_list = overlay_el.querySelectorAll('.feature');
         const existing: Element[] = [];
@@ -382,12 +428,16 @@ export function renderFeatures(viewer: Viewer) {
         feature_el_list.forEach((el) => {
             if (!el.parentNode) return;
             const track_id = el.getAttribute('track-id');
-            if (track_id === 'none' || !viewer.features.find((_) => _.track_id === track_id))
+            if (
+                track_id === 'none' ||
+                !viewer.features.find((_) => _.track_id === track_id)
+            )
                 overlay_el.removeChild(el);
             else existing.push(el);
         });
         for (const feature of viewer.features) {
-            if (!feature.content || existing.includes(feature.content)) continue;
+            if (!feature.content || existing.includes(feature.content))
+                continue;
             let coordinates = { x: 0, y: 0 };
             let size = { w: 0, h: 0 };
             const feature_container_el = document.createElement('button');
@@ -403,13 +453,18 @@ export function renderFeatures(viewer: Viewer) {
             if (!coordinates.x && !coordinates.y) continue;
             feature_container_el.classList.add('svg-viewer__svg-overlay-item');
             feature_container_el.setAttribute('feature', 'true');
-            feature_container_el.setAttribute('track-id', `${feature.track_id || 'none'}`);
+            feature_container_el.setAttribute(
+                'track-id',
+                `${feature.track_id || 'none'}`,
+            );
             feature_container_el.classList.add('feature');
             if (feature.z_index) {
                 feature_container_el.style.zIndex = `${feature.z_index}`;
             }
             if (feature.hover) {
-                feature_container_el.classList.add('svg-viewer__svg-overlay-item__hover');
+                feature_container_el.classList.add(
+                    'svg-viewer__svg-overlay-item__hover',
+                );
             }
             feature_container_el.style.top = `${coordinates.y * 100}%`;
             feature_container_el.style.left = `${coordinates.x * 100}%`;
@@ -432,17 +487,31 @@ export function renderFeatures(viewer: Viewer) {
 }
 
 export function renderActionZones(viewer: Viewer) {
-    const zone_string = JSON.stringify(viewer.actions.map((i) => ({ ...i, callback: '' })));
+    const zone_string = JSON.stringify(
+        viewer.actions.map((i) => ({ ...i, callback: '' })),
+    );
     if (zone_string !== _zones[viewer.id]) {
-        const overlay_el = viewer.element?.querySelector('.svg-viewer__svg-overlays');
+        const overlay_el = viewer.element?.querySelector(
+            '.svg-viewer__svg-overlays',
+        );
         if (!overlay_el) return;
-        const zone_el_list: Element[] = Array.from(overlay_el.querySelectorAll('.action-zone'));
+        const zone_el_list: Element[] = Array.from(
+            overlay_el.querySelectorAll('.action-zone'),
+        );
         /** Remove existing features */
         zone_el_list
             .filter((el) => el.parentNode && overlay_el.contains(el.parentNode))
             .forEach((el) => overlay_el.removeChild(el));
         for (const event of viewer.actions) {
-            if (!event.action || !event.id || event.id === '*' || event.zone === false) continue;
+            if (
+                !event.action ||
+                !event.id ||
+                event.id === '*' ||
+                event.zone === false
+            )
+                continue;
+            const existing_el = overlay_el.querySelector(`#${event.id}`);
+            if (existing_el) continue;
             const zone_el = document.createElement('button');
             zone_el.id = `${event.id}`;
             const coordinates = viewer.mappings[event.id] || { x: 0, y: 0 };
