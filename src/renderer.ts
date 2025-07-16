@@ -258,7 +258,7 @@ export async function resizeView(viewer: Viewer) {
                 const overlays_el: HTMLDivElement | null =
                     element.querySelector('.svg-viewer__svg-overlays');
                 const render_el: HTMLDivElement | null = element.querySelector(
-                    `#${viewer.id}`,
+                    `#${cleanCssSelector(viewer.id)}`,
                 );
                 const container_el: HTMLDivElement = element.querySelector(
                     '.svg-viewer',
@@ -510,7 +510,9 @@ export function renderActionZones(viewer: Viewer) {
                 event.zone === false
             )
                 continue;
-            const existing_el = overlay_el.querySelector(`#${event.id}`);
+            const existing_el = overlay_el.querySelector(
+                `#${cleanCssSelector(event.id)}`,
+            );
             if (existing_el) continue;
             const zone_el = document.createElement('button');
             zone_el.id = `${event.id}`;
