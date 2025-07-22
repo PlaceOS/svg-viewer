@@ -34,6 +34,7 @@ export async function createViewer(options: Partial<Viewer>) {
     let viewer = view_list.find((v) => v.url === options.url);
     if (viewer) return viewer.id;
     const svg_data = options.svg_data || (await loadSVGData(options.url));
+    if (!svg_data) throw new Error('No SVG data to display');
     viewer = new Viewer({ ...options, svg_data });
     subscription(
         `${viewer.id}-render`,
