@@ -1,7 +1,14 @@
 import { subscription, unsubscribeWith } from './async';
 import { log } from './helpers';
 import { createView, renderView } from './renderer';
-import { del, getViewer, listViewers, onViewerChange, replace, update } from './store';
+import {
+    del,
+    getViewer,
+    listViewers,
+    onViewerChange,
+    replace,
+    update,
+} from './store';
 import { Viewer } from './viewer.class';
 
 /**
@@ -44,7 +51,10 @@ export async function createViewer(options: Partial<Viewer>) {
  * @param viewer Viewer or ID to update
  * @param options New details for the viewer
  */
-export function updateViewer(viewer: string | Viewer, options: Partial<Viewer>): Viewer | null {
+export function updateViewer(
+    viewer: string | Viewer,
+    options: Partial<Viewer>,
+): Viewer | null {
     return update(viewer, options);
 }
 
@@ -76,10 +86,15 @@ export async function loadSVGData(url: string = '') {
         }
     }
     if (_svg_cache[url]) return _svg_cache[url];
-    const resp = await fetch(url, { headers }).catch((e) => {
+    const err_result = { text: async () => '' };
+    let resp: Response = await fetch(url, { headers }).catch((e) => {
         log('SVG VIEWER', 'Failed to load map', e, 'error');
-        return { text: async () => '' };
+        return err_result as any;
     });
+    if (resp.status >= 400) {
+        log('SVG VIEWER', 'Failed to load map', resp.statusText, 'error');
+        resp = err_result as any;
+    }
     const text = await resp.text();
     _svg_cache[url] = text;
     return text;
